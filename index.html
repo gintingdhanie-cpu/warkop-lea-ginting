@@ -1,0 +1,2259 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warkop Lae Ginting - Smart Ordering System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: #f4f6f8; color: #333; }
+        #root { display: none; }
+
+        .closed-banner {
+            background-color: #ff5e57; color: white; text-align: center;
+            padding: 8px; font-size: 13px; font-weight: 600;
+            position: sticky; top: 0; z-index: 1001; display: none;
+        }
+
+        header {
+            background-color: #1e272e; padding: 10px 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: sticky; top: 0; z-index: 1000;
+        }
+        .logo-container { display: flex; align-items: center; gap: 12px; }
+        .logo-img { width: 45px; height: 45px; object-fit: cover; border-radius: 50%; border: 2px solid #ffdd59; }
+        .logo-text { font-size: 22px; font-weight: 700; color: #ffdd59; }
+        .logo-text span { color: #ffffff; }
+        .nav-right { display: flex; align-items: center; gap: 10px; }
+        .btn-admin-toggle, .btn-member-toggle {
+            background-color: #ffdd59; color: #1e272e; border: none;
+            padding: 8px 15px; border-radius: 20px; font-weight: 600;
+            cursor: pointer; font-size: 13px; transition: all 0.2s;
+        }
+        .btn-member-toggle { background-color: #f39c12; color: white; }
+        .btn-admin-toggle:hover { background-color: #e0c24c; }
+        .cart-icon {
+            position: relative; font-size: 20px; cursor: pointer; color: #ffffff;
+            background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .cart-icon:hover { background: rgba(255, 255, 255, 0.2); }
+        .cart-count {
+            position: absolute; top: -5px; right: -5px; background-color: #ff5e57;
+            color: white; font-size: 11px; width: 18px; height: 18px;
+            border-radius: 50%; display: flex; justify-content: center;
+            align-items: center; font-weight: 600;
+        }
+
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url('https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?q=80&w=1000') no-repeat center center/cover;
+            color: white; padding: 60px 5%; text-align: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .hero-logo { width: 120px; height: 120px; object-fit: cover; border-radius: 50%; border: 4px solid #ffdd59; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .hero h1 { font-size: 34px; margin-bottom: 8px; color: #ffdd59; text-transform: uppercase; letter-spacing: 1px; }
+        .hero p { font-size: 15px; opacity: 0.9; max-width: 600px; }
+
+        .filter-section {
+            background: white; padding: 15px 5%; display: flex; flex-wrap: wrap;
+            justify-content: space-between; align-items: center; gap: 15px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+        .search-box { position: relative; flex: 1; min-width: 250px; max-width: 400px; }
+        .search-box input {
+            width: 100%; padding: 10px 15px 10px 40px; border: 1px solid #ccc;
+            border-radius: 25px; font-size: 14px; outline: none; transition: 0.2s;
+        }
+        .search-box input:focus { border-color: #ffdd59; box-shadow: 0 0 5px rgba(255,221,89,0.5); }
+        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #999; }
+        .category-buttons { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; max-width: 100%; }
+        .btn-category {
+            background: #e1e8ed; color: #4b5563; border: none;
+            padding: 8px 18px; border-radius: 20px; cursor: pointer;
+            font-weight: 600; font-size: 13px; white-space: nowrap; transition: all 0.2s;
+        }
+        .btn-category.active, .btn-category:hover { background: #1e272e; color: #ffdd59; }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+
+        .container { padding: 40px 5%; }
+        .section-title { font-size: 26px; margin-bottom: 30px; text-align: center; position: relative; color: #1e272e; }
+        .section-title::after { content: ''; width: 60px; height: 4px; background-color: #ffdd59; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); }
+        .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 25px; margin-top: 20px; }
+        .product-card {
+            background-color: white; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.3s ease;
+            display: flex; flex-direction: column; border: 1px solid #e1e8ed; position: relative;
+        }
+        .product-card:hover { transform: translateY(-5px); }
+        .product-img { width: 100%; height: 180px; object-fit: cover; background-color: #2c3e50; }
+        .sold-out-badge {
+            position: absolute; top: 15px; left: 15px; background-color: #ff5e57;
+            color: white; padding: 5px 12px; font-size: 11px; font-weight: 700;
+            border-radius: 20px; text-transform: uppercase;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10;
+        }
+        .product-info { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .product-name { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #1e272e; }
+        .product-price { color: #05c46b; font-weight: 700; font-size: 16px; margin-bottom: 15px; }
+        .btn-add-cart {
+            background-color: #1e272e; color: #ffdd59; border: none;
+            padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;
+            width: 100%; margin-top: auto; transition: all 0.2s;
+        }
+        .btn-add-cart:hover { background-color: #ffdd59; color: #1e272e; }
+        .btn-add-cart:disabled { background-color: #cbd5e1; color: #64748b; cursor: not-allowed; }
+
+        .cart-modal {
+            position: fixed; top: 0; right: -420px; width: 420px; height: 100%;
+            background-color: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            z-index: 2000; transition: right 0.3s ease; display: flex;
+            flex-direction: column; padding: 20px;
+        }
+        @media (max-width: 480px) { .cart-modal { width: 100%; right: -100%; } }
+        .cart-modal.active { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+        .close-cart { font-size: 24px; cursor: pointer; }
+        .cart-items { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
+        .cart-item { display: flex; flex-direction: column; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f1f1f1; }
+        .cart-item-upper { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .cart-item-detail h4 { font-size: 14px; font-weight: 600; }
+        .cart-item-detail p { font-size: 13px; color: #666; }
+        .cart-item-options { font-size: 11px; color: #7f8c8d; margin-top: 2px; font-style: italic; }
+        .quantity-control { display: flex; align-items: center; gap: 10px; margin-top: 5px; }
+        .btn-qty { background: #e1e8ed; border: none; width: 25px; height: 25px; border-radius: 50%; font-weight: bold; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-qty:hover { background: #ffdd59; color: #1e272e; }
+        .item-note-input { width: 100%; padding: 6px 10px; margin-top: 8px; border: 1px dashed #ccc; border-radius: 4px; font-size: 11px; outline: none; background: #fafbfc; }
+        .item-note-input:focus { border-color: #ffdd59; background: #fffdf5; }
+        .btn-remove { color: #ff5e57; cursor: pointer; background: none; border: none; font-size: 16px; }
+        .cart-footer { border-top: 1px solid #eee; padding-top: 15px; overflow-y: auto; }
+        .promo-box { display: flex; gap: 8px; margin-bottom: 12px; }
+        .promo-box input { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 12px; text-transform: uppercase; }
+        .btn-apply-promo { background: #1e272e; color: #ffdd59; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .promo-status { font-size: 11px; margin-top: -8px; margin-bottom: 10px; display: none; }
+        .points-usage-box {
+            background: #fff8e1; border: 1px dashed #f39c12; padding: 8px 10px;
+            border-radius: 6px; margin-bottom: 10px; font-size: 12px;
+            display: none;
+        }
+        .points-usage-box label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .total-price-box { display: flex; flex-direction: column; gap: 4px; font-size: 14px; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px; }
+        .price-row { display: flex; justify-content: space-between; }
+        .price-row.grand-total { font-weight: 700; font-size: 18px; color: #1e272e; border-top: 1px solid #ddd; padding-top: 6px; margin-top: 4px; }
+
+        .checkout-form label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #2c3e50; }
+        .checkout-form input, .checkout-form select, .checkout-form textarea {
+            width: 100%; padding: 8px 10px; margin-bottom: 10px;
+            border: 1px solid #ccc; border-radius: 6px; font-size: 13px; background: white;
+        }
+        .member-hint { font-size: 11px; color: #05c46b; margin-top: -6px; margin-bottom: 10px; display: none; font-weight: 600; }
+        .btn-checkout {
+            background-color: #05c46b; color: white; border: none; padding: 12px;
+            border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%;
+            font-size: 15px; display: flex; justify-content: center; align-items: center; gap: 8px;
+        }
+        .btn-checkout:hover { background-color: #04aa56; }
+
+        .receipt-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 3000; display: none;
+            justify-content: center; align-items: center; overflow-y: auto; padding: 20px;
+        }
+        .receipt-container-box { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; max-width: 360px; }
+        .receipt-box { background: white; padding: 25px; border-radius: 8px; width: 100%; font-family: 'Courier New', Courier, monospace; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+        .receipt-box h3 { text-align: center; margin-bottom: 5px; font-family: sans-serif; font-weight: 700; }
+        .receipt-divider { border-top: 1px dashed #333; margin: 10px 0; }
+        .receipt-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px; }
+        .receipt-note { font-size: 11px; color: #555; padding-left: 10px; font-style: italic; margin-bottom: 8px; }
+        .receipt-buttons { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+        .btn-download-receipt { background: #2980b9; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-family: sans-serif; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-download-receipt:hover { background: #1f6696; }
+        .btn-close-receipt { background: #1e272e; color: #ffdd59; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-family: sans-serif; font-weight: 600; }
+
+        .maps-box-wrapper { background: #f1f2f6; border-radius: 8px; padding: 10px; margin-bottom: 12px; border: 1px solid #ddd; }
+        .maps-iframe-container { width: 100%; height: 150px; border-radius: 6px; overflow: hidden; border: 0; margin-bottom: 10px; }
+
+        .cust-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 4000; display: none; justify-content: center; align-items: center; padding: 20px; }
+        .cust-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 360px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+        .cust-box h4 { font-size: 18px; font-weight: 700; margin-bottom: 15px; color: #1e272e; border-bottom: 2px solid #ffdd59; padding-bottom: 5px; }
+        .cust-group { margin-bottom: 15px; }
+        .cust-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+        .cust-option { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+        .cust-option input { cursor: pointer; }
+        .btn-cust-add { background-color: #1e272e; color: #ffdd59; border: none; padding: 12px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; font-size: 14px; }
+        .btn-cust-cancel { background: transparent; color: #7f8c8d; border: none; padding: 8px; margin-top: 8px; width: 100%; cursor: pointer; font-size: 12px; }
+
+        .admin-layout { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-top: 20px; }
+        @media (max-width: 992px) { .admin-layout { grid-template-columns: 1fr; } }
+        .admin-card { background-color: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
+        .admin-card h3 { margin-bottom: 20px; color: #1e272e; border-bottom: 2px solid #ffdd59; padding-bottom: 5px; display: inline-block; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-box { background-color: #f8f9fa; border-left: 4px solid #ffdd59; padding: 15px; border-radius: 8px; }
+        .stat-box h4 { font-size: 12px; color: #7f8c8d; text-transform: uppercase; }
+        .stat-box p { font-size: 20px; font-weight: 700; color: #1e272e; margin-top: 5px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #2c3e50; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        .checkbox-inline { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; font-size: 13px; font-weight: 500; color: #2c3e50; }
+        .btn-submit { background-color: #05c46b; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; font-size: 15px; transition: 0.2s; }
+        .btn-submit:hover { background-color: #04aa56; }
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .admin-table th, .admin-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e1e8ed; vertical-align: middle; font-size: 13px; }
+        .admin-table th { background-color: #1e272e; color: white; font-weight: 600; font-size: 12px; }
+        .admin-table img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+        .btn-status-toggle { border: none; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-status-toggle.tersedia { background-color: #d1fae5; color: #065f46; }
+        .btn-status-toggle.habis { background-color: #fee2e2; color: #991b1b; }
+        .btn-delete { background-color: #ff5e57; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-delete:hover { background-color: #e04d46; }
+        .admin-tab-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .admin-tab { background: #e1e8ed; color: #4b5563; border: none; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 13px; }
+        .admin-tab.active { background: #1e272e; color: #ffdd59; }
+        .admin-panel { display: none; }
+        .admin-panel.active { display: block; }
+
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1500; display: none; }
+        .sidebar-overlay.active { display: block; }
+
+        .toast-notif {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #1e272e; color: #ffdd59; padding: 14px 24px;
+            border-radius: 30px; font-weight: 600; font-size: 14px;
+            z-index: 9998; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            display: none; align-items: center; gap: 10px;
+            max-width: 90%; text-align: center;
+        }
+        .toast-notif.show { display: flex; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translate(-50%, 20px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+        .member-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 10px; font-weight: 700; color: white; background: #f39c12;
+        }
+        .member-badge.gold { background: linear-gradient(135deg, #f39c12, #d35400); }
+        .member-badge.silver { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        .member-badge.bronze { background: linear-gradient(135deg, #cd7f32, #a05a2c); }
+
+        .filter-bar-admin {
+            display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+        }
+        .filter-bar-admin input, .filter-bar-admin select {
+            padding: 8px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px;
+        }
+
+        .table-management-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px;
+        }
+        .table-card {
+            background: #f8fafc; border: 1px solid #e1e8ed; border-radius: 10px; padding: 12px;
+        }
+        .table-card input, .table-card select {
+            width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; margin-top: 6px; margin-bottom: 8px; font-size: 13px;
+        }
+
+        .reservation-card {
+            background: linear-gradient(135deg, #fff8e1, #ffe082);
+            border: 1px solid #f5c242; border-radius: 16px; padding: 20px; margin: 20px 5% 0;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+        }
+        .reservation-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px; }
+        .reservation-grid input, .reservation-grid select, .reservation-grid textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 13px;
+        }
+
+        .tracking-card {
+            background: linear-gradient(135deg, #1e272e, #2f3640);
+            color: white; padding: 20px 5%; margin: 20px 5% 0;
+            border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+        .tracking-card h3 { font-size: 20px; margin-bottom: 6px; }
+        .tracking-card p { font-size: 13px; opacity: 0.9; margin-bottom: 12px; }
+        .tracking-form { display: flex; gap: 10px; flex-wrap: wrap; }
+        .tracking-form input { flex: 1; min-width: 220px; padding: 10px 12px; border-radius: 8px; border: none; }
+        .tracking-form button { background: #ffdd59; color: #1e272e; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        .tracking-result { margin-top: 14px; display: grid; gap: 10px; }
+        .tracking-item { background: rgba(255,255,255,0.12); padding: 12px; border-radius: 10px; }
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; margin-top: 6px; }
+        .status-badge.diterima { background: #4fc3f7; color: #032e4a; }
+        .status-badge.diproses { background: #f9a826; color: #4a2c00; }
+        .status-badge.siap { background: #66bb6a; color: #10331a; }
+        .status-badge.selesai { background: #7e57c2; color: #fef7ff; }
+        .status-select { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 12px; }
+    </style>
+<script defer src="/static/js/bundle.js"></script><script>
+if(window.self!==window.top){
+  var s=document.createElement("script");s.src="/visual-edit-overlay.js";document.head.appendChild(s);
+  window.tailwind=window.tailwind||{};tailwind.config={corePlugins:{preflight:false}};var t=document.createElement("script");t.src="https://cdn.tailwindcss.com";document.head.appendChild(t);
+}
+</script>
+</head>
+<body>
+
+    <div class="closed-banner" id="closedBanner" data-testid="closed-banner">
+        🚨 MAAF LEK, WARKOP SEDANG TUTUP (Buka: 08.00 - 02.00 WIB). Kamu tetap bisa melihat-lihat menu.
+    </div>
+
+    <header>
+        <div class="logo-container">
+            <img src="https://i.ibb.co.com/JRZBfr1x/Gemini-Generated-Image-7rsy9r7rsy9r7rsy.png" alt="Logo Warkop Lae Ginting" class="logo-img">
+            <div class="logo-text">WARKOP <span>LAE GINTING</span></div>
+        </div>
+        <div class="nav-right">
+            <button class="btn-member-toggle" data-testid="member-check-btn" onclick="openMemberCheck()"><i class="fas fa-user"></i> Cek Poin</button>
+            <button class="btn-admin-toggle" id="adminToggleBtn" data-testid="admin-toggle-btn" onclick="toggleAdminView()"><i class="fas fa-cog"></i> Kelola</button>
+            <div class="cart-icon" id="cartIconContainer" data-testid="cart-icon" onclick="toggleCart()">
+                <i class="fas fa-coffee"></i>
+                <span class="cart-count" id="cartCount">0</span>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <img src="https://i.ibb.co.com/JRZBfr1x/Gemini-Generated-Image-7rsy9r7rsy9r7rsy.png" alt="Logo Warkop" class="hero-logo">
+        <h1>Warkop Lae Ginting</h1>
+        <p>Pesan Kopi dan Cemilan Favoritmu Sekarang, Siap Diantar atau Disediakan Meja! Setiap belanjaan dapat poin loyalti — Rp 1.000 = 1 poin. Kumpulin buat diskon berikutnya!</p>
+    </section>
+
+    <div id="filterBar" class="filter-section">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" data-testid="search-input" placeholder="Cari kopi, mie, cemilan..." onkeyup="filterMenu()">
+        </div>
+        <div class="category-buttons">
+            <button class="btn-category active" data-testid="category-semua" onclick="setCategory('semua', this)">Semua</button>
+            <button class="btn-category" data-testid="category-minuman" onclick="setCategory('minuman', this)">Minuman</button>
+            <button class="btn-category" data-testid="category-makanan" onclick="setCategory('makanan', this)">Makanan</button>
+            <button class="btn-category" data-testid="category-cemilan" onclick="setCategory('cemilan', this)">Cemilan</button>
+        </div>
+    </div>
+
+    <section class="tracking-card">
+        <h3><i class="fas fa-map-location-dot"></i> Cek Status Pesanan</h3>
+        <p>Masukkan nomor HP saat order untuk melihat status pesananmu.</p>
+        <div class="tracking-form">
+            <input type="tel" id="trackingPhoneInput" placeholder="Contoh: 0838xxxxxxx">
+            <button type="button" onclick="checkOrderTracking()"><i class="fas fa-search"></i> Cek Sekarang</button>
+        </div>
+        <div class="tracking-result" id="trackingResult"></div>
+    </section>
+
+    <section class="reservation-card">
+        <h3><i class="fas fa-calendar-check"></i> Reservasi Meja</h3>
+        <p>Booking meja sebelum datang, supaya lebih aman dan nyaman saat nongkrong.</p>
+        <form id="reservationForm" onsubmit="handleReservation(event)">
+            <div class="reservation-grid">
+                <div>
+                    <label for="reservationName">Nama</label>
+                    <input type="text" id="reservationName" required>
+                </div>
+                <div>
+                    <label for="reservationPhone">No HP</label>
+                    <input type="tel" id="reservationPhone" required>
+                </div>
+                <div>
+                    <label for="reservationDate">Tanggal</label>
+                    <input type="date" id="reservationDate" required>
+                </div>
+                <div>
+                    <label for="reservationTime">Jam</label>
+                    <input type="time" id="reservationTime" required>
+                </div>
+                <div>
+                    <label for="reservationTable">Pilih Meja</label>
+                    <select id="reservationTable" required></select>
+                </div>
+                <div>
+                    <label for="reservationPeople">Jumlah Orang</label>
+                    <input type="number" id="reservationPeople" min="1" max="10" value="2" required>
+                </div>
+            </div>
+            <div style="margin-top: 12px;">
+                <label for="reservationNote">Catatan</label>
+                <textarea id="reservationNote" rows="3" placeholder="Contoh: mau duduk dekat jendela"></textarea>
+            </div>
+            <button type="submit" class="btn-submit" style="margin-top: 12px; width:auto; padding: 10px 20px;"><i class="fas fa-paper-plane"></i> Kirim Reservasi</button>
+        </form>
+    </section>
+
+    <div id="shopView" class="container view-section active">
+        <h2 class="section-title">Menu Andalan Warkop Lae Ginting</h2>
+        <div class="product-grid" id="menuContainer" data-testid="menu-container"></div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="adminView" class="container view-section">
+        <h2 class="section-title">Kelola & Dashboard Warkop</h2>
+
+        <div class="admin-tab-bar">
+            <button class="admin-tab active" data-testid="tab-dashboard" onclick="switchAdminTab('dashboardPanel', this)">📊 Dashboard</button>
+            <button class="admin-tab" data-testid="tab-menu" onclick="switchAdminTab('menuPanel', this)">🍽️ Menu</button>
+            <button class="admin-tab" data-testid="tab-tables" onclick="switchAdminTab('tablePanel', this)">🪑 Meja</button>
+            <button class="admin-tab" data-testid="tab-members" onclick="switchAdminTab('memberPanel', this)">👥 Member</button>
+            <button id="btnAdminLogout" class="btn-delete" style="margin-left: auto; display: none;" onclick="adminSignOut()">Logout</button>
+        </div>
+
+        <!-- DASHBOARD PANEL -->
+        <div class="admin-panel active" id="dashboardPanel">
+            <div class="admin-card" style="margin-bottom: 30px;">
+                <h3>📊 Dashboard Omset & Penjualan (Kasir)</h3>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <h4>Total Omset</h4>
+                        <p id="statOmset" data-testid="stat-omset">Rp 0</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4>Transaksi Sukses</h4>
+                        <p id="statTransaksi" data-testid="stat-transaksi">0 Transaksi</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4>Total Member</h4>
+                        <p id="statMember" data-testid="stat-member">0 Member</p>
+                    </div>
+                    <div class="stat-box">
+                        <h4>Rata-Rata Transaksi</h4>
+                        <p id="statAvg" data-testid="stat-avg">Rp 0</p>
+                    </div>
+                </div>
+
+                <div class="admin-card" style="margin-bottom: 20px;">
+                    <h3>� Reservasi Meja</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>No HP</th>
+                                    <th>Tanggal</th>
+                                    <th>Jam</th>
+                                    <th>Meja</th>
+                                    <th>Orang</th>
+                                    <th>Catatan</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminReservationBody" data-testid="admin-reservation-body">
+                                <tr><td colspan="7" style="text-align:center; color:#999;">Belum ada reservasi.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-card" style="margin-bottom: 20px;">
+                    <h3>�📦 Status Pesanan Pelanggan</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama</th>
+                                    <th>No HP</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adminOrderTrackingBody" data-testid="admin-order-tracking-body">
+                                <tr><td colspan="5" style="text-align:center; color:#999;">Belum ada pesanan.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:16px; margin-top: 20px;">
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:10px;">Grafik Penjualan (30 hari)</h3>
+                        <canvas id="chartSalesTrend" width="400" height="200"></canvas>
+                    </div>
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:10px;">Transaksi per Hari (30 hari)</h3>
+                        <canvas id="chartTransactionsTrend" width="400" height="200"></canvas>
+                    </div>
+                    <div class="admin-card">
+                        <h3 style="margin-bottom:10px;">Distribusi Jam (Semua Waktu)</h3>
+                        <canvas id="chartHourly" width="400" height="200"></canvas>
+                    </div>
+                </div>
+
+                <div class="filter-bar-admin">
+                    <input type="date" id="filterStartDate" onchange="renderSalesDashboard()" data-testid="filter-start-date">
+                    <input type="date" id="filterEndDate" onchange="renderSalesDashboard()" data-testid="filter-end-date">
+                    <button class="btn-delete" style="background:#7f8c8d;" onclick="resetDateFilter()">🔄 Reset Filter</button>
+                    <button class="btn-submit" style="width:auto; padding: 8px 15px;" onclick="exportSalesCSV()"><i class="fas fa-file-csv"></i> Export CSV</button>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Waktu</th>
+                                <th>Nama Pembeli</th>
+                                <th>No HP</th>
+                                <th>Total Belanja</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesHistoryBody" data-testid="sales-history-body">
+                            <tr><td colspan="4" style="text-align: center; color: #999;">Belum ada penjualan tercatat.</td></tr>
+                        </tbody>
+                    </table>
+                    <button onclick="clearSalesData()" class="btn-delete" style="margin-top: 15px; background-color: #7f8c8d;"><i class="fas fa-trash"></i> Reset Data Penjualan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENU PANEL -->
+        <div class="admin-panel" id="menuPanel">
+            <div class="admin-layout">
+                <div class="admin-card">
+                    <h3>Tambah Menu Baru</h3>
+                    <form id="addMenuForm" onsubmit="handleAddNewMenu(event)">
+                        <div class="form-group">
+                            <label for="newMenuName">Nama Menu</label>
+                            <input type="text" id="newMenuName" data-testid="new-menu-name" placeholder="Contoh: Kopi Susu Aren" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newMenuPrice">Harga (Rupiah)</label>
+                            <input type="number" id="newMenuPrice" data-testid="new-menu-price" placeholder="Contoh: 10000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newMenuCategory">Kategori</label>
+                            <select id="newMenuCategory" data-testid="new-menu-category" required>
+                                <option value="minuman">☕ Minuman</option>
+                                <option value="makanan">🍜 Makanan</option>
+                                <option value="cemilan">🍟 Cemilan</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="newMenuStatus">Status Ketersediaan</label>
+                            <select id="newMenuStatus" data-testid="new-menu-status">
+                                <option value="tersedia">🟢 Tersedia</option>
+                                <option value="habis">🔴 Habis (Kosong)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Opsi Kustomisasi (untuk pelanggan)</label>
+                            <label class="checkbox-inline"><input type="checkbox" id="optSweetness" data-testid="opt-sweetness"> Kemanisan</label>
+                            <label class="checkbox-inline"><input type="checkbox" id="optSpicy" data-testid="opt-spicy"> Kepedasan</label>
+                            <label class="checkbox-inline"><input type="checkbox" id="optTopping" data-testid="opt-topping"> Topping</label>
+                        </div>
+                        <div class="form-group">
+                            <label for="newMenuImageUrl">Link / URL Gambar Menu</label>
+                            <input type="url" id="newMenuImageUrl" data-testid="new-menu-image" placeholder="https://domain.com/gambar.jpg" required>
+                        </div>
+                        <button type="submit" class="btn-submit" data-testid="btn-add-menu"><i class="fas fa-plus"></i> Tambahkan Ke Daftar</button>
+                    </form>
+                </div>
+
+                <div class="admin-card" style="overflow-x: auto;">
+                    <h3>Daftar Menu Aktif</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Gambar</th>
+                                <th>Nama</th>
+                                <th>Harga (Kat)</th>
+                                <th>Status Stok</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody" data-testid="admin-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLE PANEL -->
+        <div class="admin-panel" id="tablePanel">
+            <div class="admin-card">
+                <h3>🪑 Kelola Meja</h3>
+                <p style="font-size:13px; color:#666; margin-bottom:12px;">Ubah nama meja, aktifkan/nonaktifkan, tambah atau hapus meja untuk menjaga keamanan dan kenyamanan.</p>
+                <form id="addTableForm" onsubmit="handleAddTable(event)">
+                    <div class="form-group">
+                        <label for="newTableName">Nama Meja Baru</label>
+                        <input type="text" id="newTableName" placeholder="Contoh: Meja VIP" required>
+                    </div>
+                    <button type="submit" class="btn-submit"><i class="fas fa-plus"></i> Tambahkan Meja</button>
+                </form>
+                <div id="tableManagementList" class="table-management-grid"></div>
+            </div>
+        </div>
+
+        <!-- MEMBER PANEL -->
+        <div class="admin-panel" id="memberPanel">
+            <div class="admin-card">
+                <h3>👥 Daftar Member Warkop</h3>
+                <div class="stats-grid">
+                    <div class="stat-box"><h4>Total Member</h4><p id="memberTotalCount">0</p></div>
+                    <div class="stat-box"><h4>Total Poin Beredar</h4><p id="memberTotalPoints">0</p></div>
+                    <div class="stat-box"><h4>Belanja Total Member</h4><p id="memberTotalSpend">Rp 0</p></div>
+                </div>
+
+                <div class="filter-bar-admin">
+                    <input type="text" id="memberSearchInput" placeholder="Cari nama / no HP..." onkeyup="renderMemberTable()" data-testid="member-search-input" style="flex:1; min-width:200px;">
+                    <select id="memberSortBy" onchange="renderMemberTable()" data-testid="member-sort-by">
+                        <option value="lastOrderAt">Urutkan: Terbaru</option>
+                        <option value="totalSpent">Urutkan: Belanja Terbanyak</option>
+                        <option value="totalOrders">Urutkan: Order Terbanyak</option>
+                        <option value="points">Urutkan: Poin Terbanyak</option>
+                    </select>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>No HP</th>
+                                <th>Level</th>
+                                <th>Order</th>
+                                <th>Total Belanja</th>
+                                <th>Poin</th>
+                                <th>Bergabung</th>
+                                <th>Terakhir Order</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memberTableBody" data-testid="member-table-body">
+                            <tr><td colspan="9" style="text-align: center; color: #999;">Belum ada member terdaftar.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button onclick="exportMembersCSV()" class="btn-submit" style="margin-top: 15px; width:auto; padding: 10px 20px;"><i class="fas fa-file-csv"></i> Export Member CSV</button>
+                <button onclick="syncAllMembersToSheets()" class="btn-submit" style="margin-top: 15px; width:auto; padding: 10px 20px; background:#2980b9;"><i class="fas fa-cloud-upload-alt"></i> Sync Semua ke Google Sheets</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleCart()"></div>
+
+    <div id="welcomeOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(30, 39, 46, 0.95); z-index: 9999; display: flex; justify-content: center; align-items: center; text-align: center;">
+        <div style="background: white; padding: 30px; border-radius: 15px; width: 85%; max-width: 340px; box-shadow: 0 4px 25px rgba(0,0,0,0.3);">
+            <img src="https://i.ibb.co.com/JRZBfr1x/Gemini-Generated-Image-7rsy9r7rsy9r7rsy.png" alt="Logo Warkop" style="width: 100px; height: 100px; border-radius: 50%; border: 3px solid #ffdd59; margin-bottom: 15px;">
+            <h3 style="font-family: 'Poppins', sans-serif; font-weight: 700; color: #1e272e; margin-bottom: 10px;">Bujur, Lek!</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 20px;">Selamat datang di website pemesanan online Warkop Lae Ginting.</p>
+            <button data-testid="start-web-btn" onclick="startWarkopWeb()" style="background: #1e272e; color: #ffdd59; border: none; padding: 12px 25px; border-radius: 25px; font-weight: 700; cursor: pointer; font-size: 14px; width: 100%; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                👉 MASUK & LIHAT MENU ☕
+            </button>
+        </div>
+    </div>
+
+    <!-- CUSTOMIZATION MODAL -->
+    <div class="cust-overlay" id="custOverlay">
+        <div class="cust-box">
+            <h4 id="custItemName">Kustomisasi Pesanan</h4>
+            <div class="cust-group" id="sweetnessGroup">
+                <label>Pilih Kemanisan:</label>
+                <div class="cust-option"><span>Normal Sweet</span><input type="radio" name="sweetnessOpt" value="Normal Sweet" checked></div>
+                <div class="cust-option"><span>Manis Kali (Manis Gula)</span><input type="radio" name="sweetnessOpt" value="Manis Kali"></div>
+                <div class="cust-option"><span>Pahit / Kurang Manis</span><input type="radio" name="sweetnessOpt" value="Kurang Manis"></div>
+            </div>
+            <div class="cust-group" id="spicyGroup">
+                <label>Tingkat Kepedasan:</label>
+                <div class="cust-option"><span>Tidak Pedas</span><input type="radio" name="spicyOpt" value="Tidak Pedas" checked></div>
+                <div class="cust-option"><span>Pedas Sedang</span><input type="radio" name="spicyOpt" value="Pedas Sedang"></div>
+                <div class="cust-option"><span>Pedas Gila (Cabai Rawit)</span><input type="radio" name="spicyOpt" value="Pedas Gila"></div>
+            </div>
+            <div class="cust-group" id="toppingGroup">
+                <label>Topping Tambahan (Opsional):</label>
+                <div class="cust-option"><span>Telur Ayam Rebus/Ceplok (+Rp 3.000)</span><input type="checkbox" class="topping-cb" value="Telur Ayam" data-price="3000"></div>
+                <div class="cust-option"><span>Telur Bebek (+Rp 5.000)</span><input type="checkbox" class="topping-cb" value="Telur Bebek" data-price="5000"></div>
+                <div class="cust-option"><span>Parutan Keju (+Rp 2.000)</span><input type="checkbox" class="topping-cb" value="Keju Parut" data-price="2000"></div>
+            </div>
+            <button class="btn-cust-add" data-testid="btn-confirm-cust" onclick="confirmAddCartWithCustom()"><i class="fas fa-check"></i> Tambah Ke Keranjang</button>
+            <button class="btn-cust-cancel" onclick="closeCustModal()">Batal</button>
+        </div>
+    </div>
+
+    <!-- MEMBER CHECK MODAL -->
+    <div class="cust-overlay" id="memberCheckOverlay">
+        <div class="cust-box">
+            <h4>🎫 Cek Kartu Member</h4>
+            <p style="font-size: 12px; color: #666; margin-bottom: 15px;">Masukkan no HP kamu untuk lihat total belanja & poin loyalitas.</p>
+            <div class="form-group">
+                <label>No HP</label>
+                <input type="tel" id="memberCheckPhone" data-testid="member-check-phone" placeholder="08xxxxxxxxxx" style="width:100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px;">
+            </div>
+            <div id="memberCheckResult" style="display:none; background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px;"></div>
+            <button class="btn-cust-add" data-testid="btn-check-member" onclick="checkMember()"><i class="fas fa-search"></i> Cek Sekarang</button>
+            <button class="btn-cust-cancel" onclick="closeMemberCheck()">Tutup</button>
+        </div>
+    </div>
+
+    <!-- SHOPPING CART MODAL -->
+
+        <!-- ADMIN LOGIN MODAL -->
+        <div class="cust-overlay" id="adminLoginOverlay" style="display:none;">
+            <div class="cust-box">
+                <h4>🔐 Login Admin</h4>
+                <p style="font-size:12px;color:#666;margin-bottom:10px;">Masuk menggunakan akun admin (email & password).</p>
+                <div style="margin-bottom:10px; display:flex; gap:8px;">
+                    <button class="btn-submit" style="flex:1; background:#4285F4; border:none; color:white; font-weight:700;" onclick="adminSignInWithGoogle()"><i class="fab fa-google"></i> Masuk dengan Google</button>
+                </div>
+                <div class="form-group">
+                    <label for="adminEmail">Email</label>
+                    <input type="email" id="adminEmail" placeholder="admin@domain.com" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;">
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="••••••••" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:8px;">
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-cust-add" onclick="adminSignInFromForm()"><i class="fas fa-sign-in-alt"></i> Masuk</button>
+                    <button class="btn-cust-cancel" onclick="closeAdminLoginModal()">Batal</button>
+                </div>
+                <p style="font-size:11px; color:#999; margin-top:10px;">Catatan: Buat akun admin melalui Firebase Console, lalu gunakan email tersebut untuk login.</p>
+            </div>
+        </div>
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-header">
+            <h3>Daftar Pesanan</h3>
+            <span class="close-cart" onclick="toggleCart()">&times;</span>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <p style="text-align: center; color: #999; margin-top: 20px;">Belum ada pesanan.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="promo-box">
+                <input type="text" id="promoCodeInput" data-testid="promo-code-input" placeholder="Masukkan Kode Voucher...">
+                <button class="btn-apply-promo" data-testid="btn-apply-promo" onclick="applyPromo()">Klaim</button>
+            </div>
+            <div class="promo-status" id="promoStatusMessage"></div>
+
+            <div class="points-usage-box" id="pointsUsageBox">
+                <label>
+                    <input type="checkbox" id="usePointsCheckbox" data-testid="use-points-checkbox" onchange="togglePointsUsage()">
+                    Pakai poin loyalitas <strong id="pointsAvailable">0</strong> = potongan <strong id="pointsDiscountLabel">Rp 0</strong>
+                </label>
+            </div>
+
+            <div class="total-price-box">
+                <div class="price-row"><span>Subtotal:</span><span id="subtotalPrice" data-testid="subtotal-price">Rp 0</span></div>
+                <div class="price-row" id="deliveryFeeRow" style="display: none; color: #2980b9;">
+                    <span>Ongkir Delivery (<span id="deliveryDistanceLabel">0</span> km):</span>
+                    <span id="deliveryFeeValue">Rp 0</span>
+                </div>
+                <div class="price-row" id="promoDiscountRow" style="display: none; color: #ff5e57;">
+                    <span>Diskon Voucher:</span>
+                    <span id="discountValue">-Rp 0</span>
+                </div>
+                <div class="price-row" id="pointsDiscountRow" style="display: none; color: #f39c12;">
+                    <span>Potongan Poin:</span>
+                    <span id="pointsDiscountValue">-Rp 0</span>
+                </div>
+                <div class="price-row grand-total"><span>Total Bayar:</span><span id="totalPrice" data-testid="total-price">Rp 0</span></div>
+            </div>
+
+            <form class="checkout-form" onsubmit="handleCheckout(event)">
+                <label for="buyerName">Nama Pelanggan</label>
+                <input type="text" id="buyerName" data-testid="buyer-name" required placeholder="Nama pemesan...">
+
+                <label for="buyerPhone">No HP / WhatsApp <span style="color:#ff5e57;">(untuk kartu member)</span></label>
+                <input type="tel" id="buyerPhone" data-testid="buyer-phone" required placeholder="08xxxxxxxxxx" onblur="detectExistingMember()">
+                <div class="member-hint" id="memberHint"></div>
+
+                <label for="orderType">Opsi Penyajian / Pengiriman</label>
+                <select id="orderType" data-testid="order-type" onchange="toggleOrderTypeFields(this.value)" required>
+                    <option value="Makan di Sini">🍽️ Makan di Sini (Warkop)</option>
+                    <option value="Bungkus (Take Away)">🥡 Bungkus (Take Away)</option>
+                    <option value="Kirim ke Rumah (Delivery)">🛵 Kirim ke Rumah (Delivery - Min Rp 20rb)</option>
+                </select>
+
+                <div id="tableSelectorArea">
+                    <label for="tableNumber">Pilih Nomor Meja</label>
+                    <select id="tableNumber" data-testid="table-number">
+                        <option value="">Belum ada meja aktif</option>
+                    </select>
+                </div>
+
+                <div id="addressArea" style="display: none;">
+                    <div class="maps-box-wrapper">
+                        <label style="color: #1e272e; font-weight: 700;"><i class="fas fa-map-marked-alt"></i> Lokasi Antar (Google Maps)</label>
+                        <div class="maps-iframe-container" id="mapsIframeContainer">
+                            <iframe id="googleMapPreview" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" src="https://maps.google.com/maps?q=Bekasi&t=&z=13&ie=UTF8&iwloc=&output=embed"></iframe>
+                        </div>
+                        <label for="deliveryAddress">Ketik Nama Jalan / Perumahan:</label>
+                        <input type="text" id="deliveryAddress" data-testid="delivery-address" placeholder="Contoh: Jl. Diponegoro No. 12" onchange="updateMapPreview(this.value)">
+                        <label for="deliveryDistance">Estimasi Jarak dari Warkop (KM):</label>
+                        <input type="number" id="deliveryDistance" data-testid="delivery-distance" min="0.1" step="0.1" value="1.0" oninput="calculateDynamicDeliveryFee(this.value)">
+                        <small style="font-size: 10px; color: #7f8c8d; display: block; margin-top: -5px; margin-bottom: 8px;">
+                            *Ketik alamatmu, lalu isikan perkiraan jarak dalam km untuk menghitung ongkir akurat.
+                        </small>
+                    </div>
+                </div>
+
+                <label for="paymentMethod">Pilih Pembayaran</label>
+                <select id="paymentMethod" data-testid="payment-method" required>
+                    <option value="DANA">📱 Transfer DANA (0838-8679-277)</option>
+                </select>
+
+                <button type="submit" class="btn-checkout" id="btnCheckoutSubmit" data-testid="btn-checkout"><i class="fab fa-whatsapp"></i> Kirim Pesanan ke WA</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTA / STRUK DIGITAL OVERLAY -->
+    <div class="receipt-overlay" id="receiptOverlay">
+        <div class="receipt-container-box">
+            <div class="receipt-box" id="captureReceiptArea">
+                <h3>WARKOP LAE GINTING</h3>
+                <p style="text-align: center; font-size: 11px;">Kopi Kental, Cerita Lancar!</p>
+                <div class="receipt-divider"></div>
+                <div id="receiptDate" style="font-size: 11px; margin-bottom: 5px;"></div>
+                <div id="receiptCustomer" style="font-size: 11px; margin-bottom: 5px;"></div>
+                <div id="receiptPhone" style="font-size: 11px; margin-bottom: 5px;"></div>
+                <div id="receiptOrderType" style="font-size: 11px; margin-bottom: 5px;"></div>
+                <div id="receiptPayment" style="font-size: 11px; margin-bottom: 5px; font-weight: bold;"></div>
+                <div id="receiptWaitTime" style="font-size: 11px; color: #27ae60; font-weight: bold; margin-bottom: 10px;"></div>
+                <div class="receipt-divider"></div>
+                <div id="receiptItems"></div>
+                <div class="receipt-divider"></div>
+                <div class="receipt-row" id="receiptSubtotalRow"><span>SUBTOTAL</span><span id="receiptSubtotal"></span></div>
+                <div class="receipt-row" id="receiptDeliveryRow" style="display: none;"><span>ONGKIR (<span id="receiptDistanceKM"></span> km)</span><span id="receiptDeliveryCost"></span></div>
+                <div id="receiptDiscountRow" style="display: none;" class="receipt-row"><span>DISKON VOUCHER</span><span id="receiptDiscount"></span></div>
+                <div id="receiptPointsRow" style="display: none;" class="receipt-row"><span>POTONGAN POIN</span><span id="receiptPointsDiscount"></span></div>
+                <div class="receipt-row" style="font-weight: bold; font-size: 14px;"><span>TOTAL BAYAR</span><span id="receiptTotal"></span></div>
+                <div class="receipt-divider"></div>
+                <div id="receiptPointsInfo" style="font-size: 11px; color: #f39c12; text-align:center; font-weight:bold; margin: 8px 0;"></div>
+                <p style="text-align: center; font-size: 10px; margin-top: 10px;" id="receiptFooterNote"></p>
+            </div>
+            <div class="receipt-buttons">
+                <button class="btn-download-receipt" data-testid="btn-download-receipt" onclick="downloadReceiptImage()"><i class="fas fa-download"></i> SIMPAN STRUK KE HP</button>
+                <button class="btn-close-receipt" data-testid="btn-send-receipt" onclick="closeReceipt()">OKE, KIRIM SEKARANG</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIF -->
+    <div class="toast-notif" id="toastNotif" data-testid="toast-notif"></div>
+
+    <!-- Firebase SDK (compat) - paste your Firebase config di README -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- LOGIC PROGRAM -->
+    <script>
+        const orderSheetsUrl = "https://script.google.com/macros/s/AKfycbyXsJeZYqpmyCbYN-Ey0nRxl272EbwMJAkEjY8lkGbG70YT5PrE4RZQ1h2QhcvQp_kb/exec";
+        const memberSheetsUrl = "https://script.google.com/macros/s/AKfycbzBmvR7iq6xvxAbRYTZYXf4Ecv8GEIGLrnvvZ5s-h3sjyZ7w4NX0txo6xk7zL7wnq9H/exec";
+
+        const defaultMenu = [
+            { id: 1, name: "Kopi Hitam Sidikalang", price: 6000, category: "minuman", status: "tersedia", image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=600", hasSweetness: true },
+            { id: 2, name: "Es Teh Manis Jumbo", price: 4000, category: "minuman", status: "tersedia", image: "https://images.unsplash.com/photo-1556679343-c7306c1976bc?q=80&w=600", hasSweetness: true },
+            { id: 3, name: "Indomie Goreng Double", price: 15000, category: "makanan", status: "tersedia", image: "https://images.unsplash.com/photo-1585032226651-759b368d7246?q=80&w=600", hasSpicy: true, hasTopping: true },
+            { id: 4, name: "Roti Bakar Cokelat Keju", price: 10000, category: "cemilan", status: "tersedia", image: "https://images.unsplash.com/photo-1584776296944-ab6fb57b0bdd?q=80&w=600", hasTopping: true },
+            { id: 5, name: "Susu Telur Bebek Madu (STBM)", price: 18000, category: "minuman", status: "tersedia", image: "https://images.unsplash.com/photo-1541658016709-82535e94bc69?q=80&w=600" },
+            { id: 6, name: "Gorengan Hangat (Isi 5)", price: 5000, category: "cemilan", status: "tersedia", image: "https://images.unsplash.com/photo-1589301760014-d929f3979dbc?q=80&w=600" }
+        ];
+
+        const promoDatabase = {
+            "GINTINGPATEN": 5000,
+            "KOPIFREE": 3000,
+            "JUMATBERKAH": 4000
+        };
+
+        // Loyalty rules
+        const POINT_PER_RUPIAH = 1000;  // Rp 1.000 = 1 poin
+        const POINT_TO_RUPIAH = 100;    // 1 poin = Rp 100 (potongan)
+        const MIN_POINT_REDEEM = 20;    // Minimal 20 poin baru bisa dipakai
+
+        let menuWarkop = JSON.parse(localStorage.getItem('warkop_menu')) || defaultMenu;
+        let salesData = JSON.parse(localStorage.getItem('warkop_sales')) || [];
+        let memberData = JSON.parse(localStorage.getItem('warkop_members')) || {};
+        let orderTrackingData = JSON.parse(localStorage.getItem('warkop_orders')) || [];
+        let reservationData = JSON.parse(localStorage.getItem('warkop_reservations')) || [];
+        let tableData = JSON.parse(localStorage.getItem('warkop_tables')) || [
+            { id: 1, name: 'Meja 01', status: 'aktif' },
+            { id: 2, name: 'Meja 02', status: 'aktif' },
+            { id: 3, name: 'Meja 03', status: 'aktif' },
+            { id: 4, name: 'Meja 04', status: 'aktif' },
+            { id: 5, name: 'Meja 05', status: 'aktif' }
+        ];
+        const whatsappNumber = "628388679277";
+
+        let cart = [];
+        let tempCustomItem = null;
+        let activeDiscount = 0;
+        let appliedPromoCode = "";
+        let pointsDiscount = 0;
+        let usePoints = false;
+
+        let deliveryFee = 0;
+        let finalDistance = 0;
+        const ongkirPerKm = 3000;
+        const ongkirMinimal = 20000;
+
+        let isAdminActive = false;
+        let isAdminAuthenticated = false;
+        let selectedCategory = "semua";
+        let currentMember = null; // detected member on checkout
+        let currentOrderId = null;
+
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toastNotif');
+            toast.innerHTML = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        function checkWarkopOperasional() {
+            const hour = new Date().getHours();
+            const isOpen = (hour >= 8 || hour < 2);
+            const banner = document.getElementById('closedBanner');
+            const btnCheckout = document.getElementById('btnCheckoutSubmit');
+            if (!isOpen) {
+                banner.style.display = 'block';
+                if (btnCheckout) {
+                    btnCheckout.disabled = true;
+                    btnCheckout.innerText = "🚨 MAAF, WARKOP SEDANG TUTUP";
+                    btnCheckout.style.backgroundColor = "#95a5a6";
+                }
+            } else {
+                banner.style.display = 'none';
+            }
+            return isOpen;
+        }
+
+        function triggerHapticAndSound() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.frequency.value = 1200;
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                }
+            } catch (e) { }
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        function startWarkopWeb() {
+            document.getElementById('welcomeOverlay').style.display = 'none';
+            playWelcomeGreeting();
+            checkWarkopOperasional();
+            setInterval(checkWarkopOperasional, 60000);
+        }
+
+        function playWelcomeGreeting() {
+            const synth = window.speechSynthesis;
+            if (synth) {
+                synth.cancel();
+                const utterance = new SpeechSynthesisUtterance("Selamat datang di Warkop Lae Ginting! Silakan pilih kopi dan cemilan favoritmu ya.");
+                utterance.lang = 'id-ID';
+                utterance.rate = 0.95;
+                const voices = synth.getVoices();
+                const indonesianVoice = voices.find(v => v.lang.includes('id') || v.lang.includes('ID'));
+                if (indonesianVoice) utterance.voice = indonesianVoice;
+                synth.speak(utterance);
+            }
+        }
+
+        function toggleAdminView() {
+            const shopView = document.getElementById('shopView');
+            const adminView = document.getElementById('adminView');
+            const filterBar = document.getElementById('filterBar');
+            const adminBtn = document.getElementById('adminToggleBtn');
+            const cartIcon = document.getElementById('cartIconContainer');
+
+            if (!isAdminAuthenticated) {
+                document.getElementById('adminLoginOverlay').style.display = 'flex';
+                return;
+            }
+
+            if (!isAdminActive) {
+                shopView.classList.remove('active');
+                adminView.classList.add('active');
+                filterBar.style.display = 'none';
+                adminBtn.innerHTML = '<i class="fas fa-store"></i> Halaman Depan';
+                cartIcon.style.display = 'none';
+                isAdminActive = true;
+                document.getElementById('btnAdminLogout').style.display = 'inline-block';
+                renderAdminTable();
+                renderSalesDashboard();
+                renderMemberTable();
+                renderReservationList();
+            } else {
+                shopView.classList.add('active');
+                adminView.classList.remove('active');
+                filterBar.style.display = 'flex';
+                adminBtn.innerHTML = '<i class="fas fa-cog"></i> Kelola';
+                cartIcon.style.display = 'block';
+                isAdminActive = false;
+                document.getElementById('btnAdminLogout').style.display = 'none';
+                renderMenu();
+            }
+        }
+
+        function closeAdminLoginModal() {
+            const modal = document.getElementById('adminLoginOverlay');
+            modal.style.display = 'none';
+        }
+
+        function adminSignInFromForm() {
+            const password = document.getElementById('adminPassword').value;
+            if (!password) { alert('Masukkan password admin.'); return; }
+
+            if (password === '100405') {
+                isAdminAuthenticated = true;
+                closeAdminLoginModal();
+                showToast('Login admin sukses');
+                const shopView = document.getElementById('shopView');
+                const adminView = document.getElementById('adminView');
+                const filterBar = document.getElementById('filterBar');
+                const adminBtn = document.getElementById('adminToggleBtn');
+                const cartIcon = document.getElementById('cartIconContainer');
+                shopView.classList.remove('active');
+                adminView.classList.add('active');
+                filterBar.style.display = 'none';
+                adminBtn.innerHTML = '<i class="fas fa-store"></i> Halaman Depan';
+                cartIcon.style.display = 'none';
+                isAdminActive = true;
+                document.getElementById('btnAdminLogout').style.display = 'inline-block';
+                renderAdminTable();
+                renderSalesDashboard();
+                renderMemberTable();
+                renderReservationList();
+            } else {
+                alert('Password salah. Gunakan password: 100405');
+            }
+        }
+
+        function adminSignOut() {
+            isAdminAuthenticated = false;
+            isAdminActive = false;
+            showToast('Logout sukses');
+            const shopView = document.getElementById('shopView');
+            const adminView = document.getElementById('adminView');
+            const filterBar = document.getElementById('filterBar');
+            const adminBtn = document.getElementById('adminToggleBtn');
+            const cartIcon = document.getElementById('cartIconContainer');
+            shopView.classList.add('active');
+            adminView.classList.remove('active');
+            filterBar.style.display = 'flex';
+            adminBtn.innerHTML = '<i class="fas fa-cog"></i> Kelola';
+            cartIcon.style.display = 'block';
+            document.getElementById('btnAdminLogout').style.display = 'none';
+        }
+
+        function switchAdminTab(panelId, btn) {
+            document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(panelId).classList.add('active');
+            if (panelId === 'memberPanel') renderMemberTable();
+            if (panelId === 'dashboardPanel') renderSalesDashboard();
+            if (panelId === 'menuPanel') renderAdminTable();
+            if (panelId === 'tablePanel') renderTableManagement();
+            if (panelId === 'dashboardPanel') renderReservationList();
+        }
+
+        function renderMenu(filteredList = menuWarkop) {
+            const menuContainer = document.getElementById('menuContainer');
+            menuContainer.innerHTML = '';
+            if (filteredList.length === 0) {
+                menuContainer.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #999; margin-top: 20px;">Tidak ada menu yang sesuai pencarian atau kategori.</p>';
+                return;
+            }
+            filteredList.forEach(item => {
+                const isHabis = item.status === "habis";
+                const badgeHtml = isHabis ? `<div class="sold-out-badge">Habis</div>` : '';
+                const buttonText = isHabis ? 'Habis 🔴' : '+ Pesan';
+                const disabledAttr = isHabis ? 'disabled' : '';
+                menuContainer.innerHTML += `
+                    <div class="product-card">
+                        ${badgeHtml}
+                        <img src="${item.image}" alt="${item.name}" class="product-img" onerror="this.src='https://via.placeholder.com/240x180/2c3e50/ffdd59?text=Menu+Warkop'">
+                        <div class="product-info">
+                            <div class="product-name">${item.name}</div>
+                            <div class="product-price">Rp ${item.price.toLocaleString('id-ID')}</div>
+                            <button class="btn-add-cart" data-testid="add-cart-${item.id}" onclick="initAddToCart('${item.name.replace(/'/g, "\\'")}')" ${disabledAttr}>${buttonText}</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function setCategory(category, element) {
+            selectedCategory = category;
+            document.querySelectorAll('.btn-category').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            filterMenu();
+        }
+
+        function filterMenu() {
+            const q = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = menuWarkop.filter(item =>
+                (selectedCategory === "semua" || item.category === selectedCategory) &&
+                item.name.toLowerCase().includes(q)
+            );
+            renderMenu(filtered);
+        }
+
+        function initAddToCart(name) {
+            triggerHapticAndSound();
+            const menuItem = menuWarkop.find(item => item.name === name);
+            if (!menuItem) return;
+            if (menuItem.status === "habis") { alert("Maaf Lek, menu ini lagi kosong!"); return; }
+            if (!menuItem.hasSweetness && !menuItem.hasSpicy && !menuItem.hasTopping) {
+                addDirectToCart(menuItem.name, menuItem.price, "", 0);
+                showToast(`✅ ${menuItem.name} masuk keranjang!`);
+                return;
+            }
+            tempCustomItem = menuItem;
+            document.getElementById('custItemName').innerText = `Sesuaikan: ${menuItem.name}`;
+            document.getElementById('sweetnessGroup').style.display = menuItem.hasSweetness ? 'block' : 'none';
+            document.getElementById('spicyGroup').style.display = menuItem.hasSpicy ? 'block' : 'none';
+            document.getElementById('toppingGroup').style.display = menuItem.hasTopping ? 'block' : 'none';
+            document.querySelectorAll('.topping-cb').forEach(cb => cb.checked = false);
+            document.getElementById('custOverlay').style.display = 'flex';
+        }
+
+        function closeCustModal() {
+            document.getElementById('custOverlay').style.display = 'none';
+            tempCustomItem = null;
+        }
+
+        function confirmAddCartWithCustom() {
+            if (!tempCustomItem) return;
+            let notes = [];
+            let extraCost = 0;
+            if (tempCustomItem.hasSweetness) {
+                const v = document.querySelector('input[name="sweetnessOpt"]:checked');
+                if (v) notes.push(v.value);
+            }
+            if (tempCustomItem.hasSpicy) {
+                const v = document.querySelector('input[name="spicyOpt"]:checked');
+                if (v) notes.push(v.value);
+            }
+            if (tempCustomItem.hasTopping) {
+                const selected = [];
+                document.querySelectorAll('.topping-cb:checked').forEach(cb => {
+                    selected.push(cb.value);
+                    extraCost += parseInt(cb.getAttribute('data-price'));
+                });
+                if (selected.length > 0) notes.push("Topping: " + selected.join(', '));
+            }
+            const customNotes = notes.join(' | ');
+            addDirectToCart(tempCustomItem.name, tempCustomItem.price, customNotes, extraCost);
+            showToast(`✅ ${tempCustomItem.name} masuk keranjang!`);
+            document.getElementById('custOverlay').style.display = 'none';
+            tempCustomItem = null;
+        }
+
+        function addDirectToCart(name, basePrice, customNotes, extraCost) {
+            const finalPrice = basePrice + extraCost;
+            const existing = cart.find(item => item.name === name && item.options === customNotes);
+            if (existing) existing.quantity += 1;
+            else cart.push({ name, price: finalPrice, quantity: 1, options: customNotes, note: "" });
+            updateCartUI();
+        }
+
+        function toggleCart() {
+            document.getElementById('cartModal').classList.toggle('active');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        }
+
+        function updateMapPreview(address) {
+            if (!address.trim()) return;
+            const iframe = document.getElementById('googleMapPreview');
+            iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+        }
+
+        function calculateDynamicDeliveryFee(distanceValue) {
+            let distance = parseFloat(distanceValue);
+            if (isNaN(distance) || distance <= 0) distance = 0;
+            finalDistance = distance;
+            if (distance === 0) deliveryFee = 0;
+            else deliveryFee = Math.max(distance * ongkirPerKm, ongkirMinimal);
+            document.getElementById('deliveryDistanceLabel').innerText = distance;
+            document.getElementById('deliveryFeeValue').innerText = 'Rp ' + deliveryFee.toLocaleString('id-ID');
+            updateCartUI();
+        }
+
+        function toggleOrderTypeFields(value) {
+            const tableArea = document.getElementById('tableSelectorArea');
+            const addressArea = document.getElementById('addressArea');
+            const deliveryRow = document.getElementById('deliveryFeeRow');
+            if (value === "Kirim ke Rumah (Delivery)") {
+                tableArea.style.display = 'none';
+                addressArea.style.display = 'block';
+                document.getElementById('deliveryAddress').required = true;
+                calculateDynamicDeliveryFee(document.getElementById('deliveryDistance').value);
+                deliveryRow.style.display = 'flex';
+            } else {
+                tableArea.style.display = 'block';
+                addressArea.style.display = 'none';
+                document.getElementById('deliveryAddress').required = false;
+                deliveryFee = 0;
+                finalDistance = 0;
+                deliveryRow.style.display = 'none';
+            }
+            updateCartUI();
+        }
+
+        function changeQty(name, options, amount) {
+            const item = cart.find(i => i.name === name && i.options === options);
+            if (item) {
+                item.quantity += amount;
+                if (item.quantity <= 0) cart = cart.filter(i => !(i.name === name && i.options === options));
+            }
+            updateCartUI();
+        }
+
+        function removeFromCart(name, options) {
+            cart = cart.filter(i => !(i.name === name && i.options === options));
+            updateCartUI();
+        }
+
+        function updateItemNote(name, options, val) {
+            const item = cart.find(i => i.name === name && i.options === options);
+            if (item) item.note = val;
+        }
+
+        function applyPromo() {
+            const code = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+            const msg = document.getElementById('promoStatusMessage');
+            if (!code) { alert("Masukkan kodenya dulu Lek!"); return; }
+            if (promoDatabase.hasOwnProperty(code)) {
+                activeDiscount = promoDatabase[code];
+                appliedPromoCode = code;
+                msg.style.display = "block";
+                msg.style.color = "#05c46b";
+                msg.innerHTML = `✔️ Kode <strong>${code}</strong> digunakan! Potongan Rp ${activeDiscount.toLocaleString('id-ID')}`;
+            } else {
+                activeDiscount = 0;
+                appliedPromoCode = "";
+                msg.style.display = "block";
+                msg.style.color = "#ff5e57";
+                msg.innerHTML = `❌ Kode promo salah!`;
+            }
+            updateCartUI();
+        }
+
+        function togglePointsUsage() {
+            usePoints = document.getElementById('usePointsCheckbox').checked;
+            updateCartUI();
+        }
+
+        function detectExistingMember() {
+            const phone = document.getElementById('buyerPhone').value.trim();
+            const nameField = document.getElementById('buyerName');
+            const hint = document.getElementById('memberHint');
+            const box = document.getElementById('pointsUsageBox');
+
+            if (!phone) { hint.style.display = 'none'; box.style.display = 'none'; currentMember = null; return; }
+
+            const cleanPhone = normalizePhone(phone);
+            const member = memberData[cleanPhone];
+
+            if (member) {
+                currentMember = member;
+                if (!nameField.value) nameField.value = member.name;
+                hint.style.display = 'block';
+                hint.innerHTML = `🎉 Halo <strong>${member.name}</strong>! Kamu member ${getMemberLevel(member.totalSpent).label}, punya <strong>${member.points} poin</strong> (± Rp ${(member.points * POINT_TO_RUPIAH).toLocaleString('id-ID')}).`;
+                if (member.points >= MIN_POINT_REDEEM) {
+                    box.style.display = 'block';
+                    document.getElementById('pointsAvailable').innerText = member.points;
+                    document.getElementById('pointsDiscountLabel').innerText = 'Rp ' + (member.points * POINT_TO_RUPIAH).toLocaleString('id-ID');
+                } else {
+                    box.style.display = 'none';
+                }
+            } else {
+                currentMember = null;
+                hint.style.display = 'block';
+                hint.style.color = '#f39c12';
+                hint.innerHTML = `✨ Pelanggan baru! Order ini otomatis daftar member & dapat poin loyalti.`;
+                box.style.display = 'none';
+            }
+            updateCartUI();
+        }
+
+        function normalizePhone(phone) {
+            let p = phone.replace(/\D/g, '');
+            if (p.startsWith('62')) p = '0' + p.substring(2);
+            return p;
+        }
+
+        function getMemberLevel(totalSpent) {
+            if (totalSpent >= 500000) return { level: 'gold', label: '🏆 GOLD' };
+            if (totalSpent >= 200000) return { level: 'silver', label: '🥈 SILVER' };
+            if (totalSpent >= 50000) return { level: 'bronze', label: '🥉 BRONZE' };
+            return { level: 'new', label: '🆕 NEW' };
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItems');
+            const cnt = document.getElementById('cartCount');
+            const subEl = document.getElementById('subtotalPrice');
+            const promoRow = document.getElementById('promoDiscountRow');
+            const discEl = document.getElementById('discountValue');
+            const totalEl = document.getElementById('totalPrice');
+            const pointsRow = document.getElementById('pointsDiscountRow');
+            const pointsVal = document.getElementById('pointsDiscountValue');
+
+            if (cart.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; margin-top: 20px;">Belum ada pesanan.</p>';
+                cnt.innerText = 0;
+                subEl.innerText = 'Rp 0';
+                totalEl.innerText = 'Rp 0';
+                promoRow.style.display = 'none';
+                pointsRow.style.display = 'none';
+                return;
+            }
+
+            let totalItems = 0, subtotal = 0;
+            container.innerHTML = '';
+            cart.forEach(item => {
+                totalItems += item.quantity;
+                subtotal += (item.price * item.quantity);
+                const optHtml = item.options ? `<div class="cart-item-options">[ ${item.options} ]</div>` : '';
+                const safeName = item.name.replace(/'/g, "\\'");
+                const safeOpts = (item.options || '').replace(/'/g, "\\'");
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div class="cart-item-upper">
+                            <div class="cart-item-detail">
+                                <h4>${item.name}</h4>
+                                ${optHtml}
+                                <p>Rp ${item.price.toLocaleString('id-ID')}</p>
+                                <div class="quantity-control">
+                                    <button class="btn-qty" onclick="changeQty('${safeName}', '${safeOpts}', -1)">-</button>
+                                    <span style="font-weight: 600; font-size: 14px;">${item.quantity}</span>
+                                    <button class="btn-qty" onclick="changeQty('${safeName}', '${safeOpts}', 1)">+</button>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <strong>Rp ${(item.price * item.quantity).toLocaleString('id-ID')}</strong>
+                                <button class="btn-remove" onclick="removeFromCart('${safeName}', '${safeOpts}')"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                        <input type="text" class="item-note-input" placeholder="Tulis catatan (cth: manis kali, es dikit...)" value="${item.note || ''}" onchange="updateItemNote('${safeName}', '${safeOpts}', this.value)">
+                    </div>
+                `;
+            });
+
+            cnt.innerText = totalItems;
+            subEl.innerText = 'Rp ' + subtotal.toLocaleString('id-ID');
+
+            // points discount
+            pointsDiscount = 0;
+            if (usePoints && currentMember && currentMember.points >= MIN_POINT_REDEEM) {
+                pointsDiscount = Math.min(currentMember.points * POINT_TO_RUPIAH, subtotal);
+                pointsRow.style.display = 'flex';
+                pointsVal.innerText = '-Rp ' + pointsDiscount.toLocaleString('id-ID');
+            } else {
+                pointsRow.style.display = 'none';
+            }
+
+            let finalPrice = subtotal + deliveryFee - activeDiscount - pointsDiscount;
+            if (finalPrice < 0) finalPrice = 0;
+            if (activeDiscount > 0) {
+                promoRow.style.display = 'flex';
+                discEl.innerText = '-Rp ' + activeDiscount.toLocaleString('id-ID');
+            } else promoRow.style.display = 'none';
+            totalEl.innerText = 'Rp ' + finalPrice.toLocaleString('id-ID');
+        }
+
+        function handleCheckout(event) {
+            event.preventDefault();
+            if (!checkWarkopOperasional()) { alert("Maaf ya Lek, warkop sudah tutup. Buka lagi jam 08.00 pagi!"); return; }
+            if (cart.length === 0) { alert('Pilih menunya dulu dong, Lek!'); return; }
+
+            const name = document.getElementById('buyerName').value;
+            const phone = document.getElementById('buyerPhone').value;
+            const orderType = document.getElementById('orderType').value;
+            const table = document.getElementById('tableNumber').value;
+            const address = document.getElementById('deliveryAddress').value;
+            const payment = document.getElementById('paymentMethod').value;
+            currentOrderId = `ORD-${Date.now().toString().slice(-6)}`;
+
+            if (orderType === "Makan di Sini" && !table) {
+                alert('Pilih meja yang aktif dulu, Lek.');
+                return;
+            }
+
+            let orderDest = orderType;
+            if (orderType === "Makan di Sini") orderDest = `Makan di Sini (Meja: ${table})`;
+            else if (orderType === "Kirim ke Rumah (Delivery)") orderDest = `Kirim ke Alamat: ${address} (Est. ${finalDistance} km)`;
+
+            showReceipt(name, phone, orderDest, payment);
+        }
+
+        function showReceipt(name, phone, orderDest, payment) {
+            const now = new Date();
+            document.getElementById('receiptDate').innerText = `Waktu: ${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID')}`;
+            document.getElementById('receiptCustomer').innerHTML = `Pelanggan: ${name}`;
+            document.getElementById('receiptPhone').innerHTML = `No HP: ${phone}`;
+            document.getElementById('receiptOrderType').innerHTML = `Tujuan: ${orderDest}`;
+            document.getElementById('receiptPayment').innerHTML = `Metode: ${payment === 'DANA' ? 'DANA (Transfer)' : 'Tunai (Cash)'}`;
+
+            let totalCnt = 0;
+            cart.forEach(i => totalCnt += i.quantity);
+            document.getElementById('receiptWaitTime').innerText = `Estimasi Waktu Tunggu: ± ${5 + (totalCnt * 2)} Menit`;
+
+            const itemsBox = document.getElementById('receiptItems');
+            itemsBox.innerHTML = '';
+            let subtotal = 0;
+            cart.forEach(item => {
+                const s = item.price * item.quantity;
+                subtotal += s;
+                let line = `<div class="receipt-row"><span>${item.name} (${item.quantity}x)</span><span>Rp ${s.toLocaleString('id-ID')}</span></div>`;
+                if (item.options) line += `<div class="receipt-note">Varian: ${item.options}</div>`;
+                if (item.note) line += `<div class="receipt-note">* Catatan: "${item.note}"</div>`;
+                itemsBox.innerHTML += line;
+            });
+
+            let grand = subtotal + deliveryFee - activeDiscount - pointsDiscount;
+            if (grand < 0) grand = 0;
+
+            document.getElementById('receiptSubtotal').innerText = 'Rp ' + subtotal.toLocaleString('id-ID');
+
+            const dR = document.getElementById('receiptDeliveryRow');
+            if (deliveryFee > 0) {
+                dR.style.display = 'flex';
+                document.getElementById('receiptDistanceKM').innerText = finalDistance;
+                document.getElementById('receiptDeliveryCost').innerText = 'Rp ' + deliveryFee.toLocaleString('id-ID');
+            } else dR.style.display = 'none';
+
+            const discR = document.getElementById('receiptDiscountRow');
+            if (activeDiscount > 0) {
+                discR.style.display = 'flex';
+                document.getElementById('receiptDiscount').innerText = '-Rp ' + activeDiscount.toLocaleString('id-ID');
+            } else discR.style.display = 'none';
+
+            const ptsR = document.getElementById('receiptPointsRow');
+            if (pointsDiscount > 0) {
+                ptsR.style.display = 'flex';
+                document.getElementById('receiptPointsDiscount').innerText = '-Rp ' + pointsDiscount.toLocaleString('id-ID');
+            } else ptsR.style.display = 'none';
+
+            // Points earned this transaction (based on subtotal after voucher, before points redeem)
+            const spentForPoints = Math.max(subtotal - activeDiscount, 0);
+            const pointsEarned = Math.floor(spentForPoints / POINT_PER_RUPIAH);
+            const ptsInfo = document.getElementById('receiptPointsInfo');
+            if (pointsEarned > 0) {
+                ptsInfo.innerText = `🎉 Kamu dapat ${pointsEarned} poin loyalti dari transaksi ini!`;
+                ptsInfo.style.display = 'block';
+            } else ptsInfo.style.display = 'none';
+
+            const footerNote = document.getElementById('receiptFooterNote');
+            if (payment === 'DANA') {
+                footerNote.innerHTML = `<strong>*Silakan transfer Rp ${grand.toLocaleString('id-ID')} ke Nomor DANA: 0838-8679-277 a.n DHANIE*</strong>, lalu kirim struk ini ke WA warkop.`;
+            } else {
+                footerNote.innerText = "Pesanan akan langsung dikirim ke WhatsApp Warkop Lae Ginting untuk diproses.";
+            }
+            document.getElementById('receiptTotal').innerText = 'Rp ' + grand.toLocaleString('id-ID');
+            document.getElementById('receiptOverlay').style.display = 'flex';
+        }
+
+        function downloadReceiptImage() {
+            const area = document.getElementById('captureReceiptArea');
+            html2canvas(area, { useCORS: true, allowTaint: true, backgroundColor: "#ffffff" })
+                .then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = 'Struk_Warkop_Lae_Ginting.png';
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                    showToast('📸 Struk tersimpan ke galeri HP-mu!');
+                }).catch(err => {
+                    alert("Waduh, fitur simpan struk gagal. Coba refresh browser ya Lek!");
+                    console.error(err);
+                });
+        }
+
+        function closeReceipt() {
+            document.getElementById('receiptOverlay').style.display = 'none';
+
+            const name = document.getElementById('buyerName').value;
+            const phone = document.getElementById('buyerPhone').value;
+            const orderType = document.getElementById('orderType').value;
+            const table = document.getElementById('tableNumber').value;
+            const address = document.getElementById('deliveryAddress').value;
+            const payment = document.getElementById('paymentMethod').value;
+
+            let details = "", subtotalVal = 0;
+            cart.forEach((item, i) => {
+                const s = item.price * item.quantity;
+                subtotalVal += s;
+                details += `${i + 1}. ${item.name} (${item.quantity}x) = Rp ${s.toLocaleString('id-ID')}\n`;
+                if (item.options) details += `   📌 Varian: [ ${item.options} ]\n`;
+                if (item.note) details += `   👉 Catatan: "${item.note}"\n`;
+            });
+
+            let grand = subtotalVal + deliveryFee - activeDiscount - pointsDiscount;
+            if (grand < 0) grand = 0;
+
+            // Update member data
+            const spentForPoints = Math.max(subtotalVal - activeDiscount, 0);
+            const pointsEarned = Math.floor(spentForPoints / POINT_PER_RUPIAH);
+            updateMemberData(name, phone, grand, pointsEarned, pointsDiscount);
+
+            saveSalesData(name, phone, grand);
+
+            const orderStatusLabel = 'Diterima';
+            const orderItems = cart.map(item => `${item.name}${item.quantity > 1 ? ` x${item.quantity}` : ''}`).join(', ');
+            orderTrackingData.push({
+                id: currentOrderId,
+                name,
+                phone: normalizePhone(phone),
+                total: grand,
+                items: orderItems,
+                status: 'diterima',
+                statusLabel: orderStatusLabel,
+                timestamp: new Date().toISOString()
+            });
+            localStorage.setItem('warkop_orders', JSON.stringify(orderTrackingData));
+
+            let orderDetails = orderType;
+            if (orderType === "Makan di Sini") orderDetails = `Makan di Sini (Meja: ${table})`;
+            else if (orderType === "Kirim ke Rumah (Delivery)") orderDetails = `Antar ke Alamat: ${address} (Est. ${finalDistance} km)`;
+
+            let extended = details;
+            if (activeDiscount > 0) extended += `\n[Voucher Promo: ${appliedPromoCode} (Diskon Rp ${activeDiscount.toLocaleString('id-ID')})]`;
+            if (pointsDiscount > 0) extended += `\n[Potongan Poin: -Rp ${pointsDiscount.toLocaleString('id-ID')}]`;
+            if (deliveryFee > 0) extended += `\n[Ongkir Delivery: Rp ${deliveryFee.toLocaleString('id-ID')} (${finalDistance} km)]`;
+            extended += `\n\n[Penyajian: ${orderDetails}] \n[Metode Bayar: ${payment}] \n[Poin Didapat: ${pointsEarned}]`;
+
+            // Send to ORDER sheet
+            if (orderSheetsUrl) {
+                fetch(orderSheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nama: name, hp: phone, pesanan: extended, total: grand })
+                }).catch(e => console.log('Order sync err', e));
+            }
+
+            sendToWhatsApp(name, phone, orderDetails, details, subtotalVal, grand, payment, pointsEarned);
+        }
+
+        function updateMemberData(name, phone, grandTotal, pointsEarned, pointsUsedNow) {
+            const cleanPhone = normalizePhone(phone);
+            const now = new Date().toISOString();
+            let isNewMember = false;
+
+            if (!memberData[cleanPhone]) {
+                memberData[cleanPhone] = {
+                    name: name,
+                    phone: cleanPhone,
+                    joinedAt: now,
+                    lastOrderAt: now,
+                    totalOrders: 0,
+                    totalSpent: 0,
+                    points: 0
+                };
+                isNewMember = true;
+            }
+
+            const m = memberData[cleanPhone];
+            m.name = name; // update name if changed
+            m.lastOrderAt = now;
+            m.totalOrders += 1;
+            m.totalSpent += grandTotal;
+            m.points = m.points - Math.floor(pointsUsedNow / POINT_TO_RUPIAH) + pointsEarned;
+            if (m.points < 0) m.points = 0;
+
+            localStorage.setItem('warkop_members', JSON.stringify(memberData));
+
+            // jika Firestore tersedia, simpan member ke koleksi 'members' (doc id = phone)
+            if (window.firebase && firebase.firestore) {
+                try {
+                    const db = firebase.firestore();
+                    const mCopy = Object.assign({}, m);
+                    db.collection('members').doc(m.phone).set(mCopy).catch(e => console.warn('save member err', e));
+                } catch (e) { console.warn('updateMemberData firestore err', e); }
+            }
+
+            // Sync member to Google Sheets
+            if (memberSheetsUrl) {
+                const level = getMemberLevel(m.totalSpent).label;
+                fetch(memberSheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nama: m.name,
+                        hp: m.phone,
+                        joinedAt: m.joinedAt,
+                        lastOrderAt: m.lastOrderAt,
+                        totalOrders: m.totalOrders,
+                        totalSpent: m.totalSpent,
+                        points: m.points,
+                        level: level,
+                        isNewMember: isNewMember,
+                        lastTransaction: grandTotal
+                    })
+                }).catch(e => console.log('Member sync err', e));
+            }
+        }
+
+        function sendToWhatsApp(name, phone, orderDetails, details, subtotalVal, grand, payment, pointsEarned) {
+            let text = `*☕ PESANAN BARU - WARKOP LAE GINTING ☕* \n\n`;
+            text += `📌 *Detail Pelanggan:* \n`;
+            text += `• Nama: ${name}\n`;
+            text += `• No HP: ${phone}\n`;
+            text += `• Tujuan/Order: *${orderDetails}*\n`;
+            text += `• Metode Pembayaran: *${payment === 'DANA' ? '📱 Transfer DANA' : '💵 Tunai (Cash)'}*\n\n`;
+            text += `📝 *Daftar Menu:* \n${details}`;
+            if (deliveryFee > 0) text += `🛵 *Biaya Ongkir (${finalDistance} km):* Rp ${deliveryFee.toLocaleString('id-ID')}\n`;
+            if (activeDiscount > 0) text += `🎟️ *Kupon Diskon:* -Rp ${activeDiscount.toLocaleString('id-ID')} (Kode: ${appliedPromoCode})\n`;
+            if (pointsDiscount > 0) text += `⭐ *Potongan Poin:* -Rp ${pointsDiscount.toLocaleString('id-ID')}\n`;
+            text += `\n💵 *Total Akhir:* *Rp ${grand.toLocaleString('id-ID')}*\n`;
+            if (pointsEarned > 0) text += `🎁 *Poin didapat:* +${pointsEarned} poin loyalti\n`;
+            text += `\n`;
+            if (payment === 'DANA') {
+                text += `⚠️ *Informasi Pembayaran:* \n• Silakan transfer ke DANA: *08388679277*\n• Atas Nama: *DHANIE*\n\n`;
+            }
+            text += `🙏 *Terima kasih banyak sudah jajan di Warkop Lae Ginting!* Selagi menunggu, silakan santai menikmati wifi kami ya Lek. Kopi kental, cerita lancar! ☕✨`;
+
+            const url = `https://api.whatsapp.com/send?phone=${whatsappNumber}&text=${encodeURIComponent(text)}`;
+
+            cart = [];
+            activeDiscount = 0;
+            appliedPromoCode = "";
+            pointsDiscount = 0;
+            usePoints = false;
+            deliveryFee = 0;
+            finalDistance = 0;
+            currentMember = null;
+            updateCartUI();
+            toggleCart();
+            document.getElementById('buyerName').value = '';
+            document.getElementById('buyerPhone').value = '';
+            document.getElementById('orderType').value = 'Makan di Sini';
+            const firstActiveTable = tableData.find(t => t.status === 'aktif');
+            document.getElementById('tableNumber').value = firstActiveTable ? firstActiveTable.name : '';
+            document.getElementById('deliveryAddress').value = '';
+            document.getElementById('paymentMethod').value = 'DANA';
+            document.getElementById('promoCodeInput').value = '';
+            document.getElementById('promoStatusMessage').style.display = 'none';
+            document.getElementById('memberHint').style.display = 'none';
+            document.getElementById('pointsUsageBox').style.display = 'none';
+            document.getElementById('usePointsCheckbox').checked = false;
+            document.getElementById('tableSelectorArea').style.display = 'block';
+            document.getElementById('addressArea').style.display = 'none';
+
+            window.open(url, '_blank');
+        }
+
+        function saveSalesData(name, phone, total) {
+            const now = new Date();
+            salesData.push({
+                time: `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID')}`,
+                timestamp: now.toISOString(),
+                name: name,
+                phone: normalizePhone(phone),
+                total: total
+            });
+            localStorage.setItem('warkop_sales', JSON.stringify(salesData));
+
+            // jika Firestore tersedia, tambahkan dokumen ke koleksi 'sales'
+            if (window.firebase && firebase.firestore) {
+                try {
+                    const db = firebase.firestore();
+                    db.collection('sales').add({
+                        time: `${now.toLocaleDateString('id-ID')} ${now.toLocaleTimeString('id-ID')}`,
+                        timestamp: now.toISOString(),
+                        name: name,
+                        phone: normalizePhone(phone),
+                        total: total
+                    }).catch(e => console.warn('save sale err', e));
+                } catch (e) { console.warn('saveSalesData firestore err', e); }
+            }
+        }
+
+        function getFilteredSales() {
+            const startDate = document.getElementById('filterStartDate')?.value;
+            const endDate = document.getElementById('filterEndDate')?.value;
+            if (!startDate && !endDate) return salesData;
+            return salesData.filter(s => {
+                if (!s.timestamp) return true;
+                const t = new Date(s.timestamp);
+                if (startDate && t < new Date(startDate)) return false;
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(23,59,59,999);
+                    if (t > end) return false;
+                }
+                return true;
+            });
+        }
+
+        function resetDateFilter() {
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            renderSalesDashboard();
+        }
+
+        function renderSalesDashboard() {
+            const tbody = document.getElementById('salesHistoryBody');
+            const filtered = getFilteredSales();
+            tbody.innerHTML = '';
+            renderOrderTrackingTable();
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">Belum ada penjualan di rentang tanggal ini.</td></tr>';
+                document.getElementById('statOmset').innerText = 'Rp 0';
+                document.getElementById('statTransaksi').innerText = '0 Transaksi';
+                document.getElementById('statAvg').innerText = 'Rp 0';
+                document.getElementById('statMember').innerText = Object.keys(memberData).length + ' Member';
+                // update charts
+                try { renderDashboardCharts(); } catch(e){ console.warn('renderDashboardCharts err', e); }
+                return;
+            }
+            let total = 0;
+            filtered.forEach(s => {
+                total += s.total;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.time}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td>${s.phone || '-'}</td>
+                        <td>Rp ${s.total.toLocaleString('id-ID')}</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('statOmset').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            document.getElementById('statTransaksi').innerText = `${filtered.length} Transaksi`;
+            document.getElementById('statAvg').innerText = 'Rp ' + Math.round(total / filtered.length).toLocaleString('id-ID');
+            document.getElementById('statMember').innerText = Object.keys(memberData).length + ' Member';
+            try { renderDashboardCharts(); } catch(e){ console.warn('renderDashboardCharts err', e); }
+        }
+
+        // --- Charts ---
+        let salesChart = null, transactionsChart = null, hourlyChart = null;
+        function renderDashboardCharts() {
+            const days = 30;
+            const filtered = getFilteredSales();
+            // build labels for last N days
+            const labels = [];
+            const totalsMap = {};
+            const countsMap = {};
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(); d.setDate(d.getDate() - i);
+                const key = d.toISOString().slice(0,10);
+                labels.push(key);
+                totalsMap[key] = 0;
+                countsMap[key] = 0;
+            }
+            filtered.forEach(s => {
+                if (!s.timestamp) return;
+                const k = s.timestamp.slice(0,10);
+                if (k in totalsMap) {
+                    totalsMap[k] += (s.total || 0);
+                    countsMap[k] += 1;
+                }
+            });
+            const totals = labels.map(l => totalsMap[l] || 0);
+            const counts = labels.map(l => countsMap[l] || 0);
+
+            // hourly distribution (0-23)
+            const hours = Array.from({length:24}, (_,i)=>i);
+            const hourCounts = Array(24).fill(0);
+            salesData.forEach(s => {
+                if (!s.timestamp) return;
+                const h = new Date(s.timestamp).getHours();
+                hourCounts[h] = (hourCounts[h] || 0) + 1;
+            });
+
+            // Sales trend chart
+            const ctxSales = document.getElementById('chartSalesTrend').getContext('2d');
+            if (salesChart) salesChart.destroy();
+            salesChart = new Chart(ctxSales, {
+                type: 'line',
+                data: { labels, datasets: [{ label: 'Omset (Rp)', data: totals, borderColor: '#1e88e5', backgroundColor: 'rgba(30,136,229,0.1)', fill:true }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+            });
+
+            // Transactions chart
+            const ctxTrans = document.getElementById('chartTransactionsTrend').getContext('2d');
+            if (transactionsChart) transactionsChart.destroy();
+            transactionsChart = new Chart(ctxTrans, {
+                type: 'bar',
+                data: { labels, datasets: [{ label: 'Transaksi', data: counts, backgroundColor: '#ffb300' }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+            });
+
+            // Hourly chart
+            const ctxHour = document.getElementById('chartHourly').getContext('2d');
+            if (hourlyChart) hourlyChart.destroy();
+            hourlyChart = new Chart(ctxHour, {
+                type: 'bar',
+                data: { labels: hours.map(h=>String(h)), datasets: [{ label: 'Transaksi per Jam', data: hourCounts, backgroundColor: '#4caf50' }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
+            });
+        }
+
+        function renderOrderTrackingTable() {
+            const tbody = document.getElementById('adminOrderTrackingBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            const activeOrders = [...orderTrackingData].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            if (activeOrders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">Belum ada pesanan.</td></tr>';
+                return;
+            }
+            activeOrders.forEach(order => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${order.id}</td>
+                        <td>${order.name}</td>
+                        <td>${order.phone}</td>
+                        <td>Rp ${order.total.toLocaleString('id-ID')}</td>
+                        <td>
+                            <select class="status-select" onchange="updateOrderStatus('${order.id}', this.value)">
+                                <option value="diterima" ${order.status === 'diterima' ? 'selected' : ''}>Diterima</option>
+                                <option value="diproses" ${order.status === 'diproses' ? 'selected' : ''}>Diproses</option>
+                                <option value="siap" ${order.status === 'siap' ? 'selected' : ''}>Siap</option>
+                                <option value="selesai" ${order.status === 'selesai' ? 'selected' : ''}>Selesai</option>
+                            </select>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function updateOrderStatus(orderId, newStatus) {
+            orderTrackingData = orderTrackingData.map(order => order.id === orderId ? { ...order, status: newStatus } : order);
+            localStorage.setItem('warkop_orders', JSON.stringify(orderTrackingData));
+            renderOrderTrackingTable();
+            showToast('✅ Status pesanan diperbarui');
+        }
+
+        function checkOrderTracking() {
+            const phone = normalizePhone(document.getElementById('trackingPhoneInput').value);
+            const result = document.getElementById('trackingResult');
+            const matched = orderTrackingData.filter(order => order.phone === phone);
+            if (!phone) { result.innerHTML = '<div class="tracking-item">Masukkan nomor HP terlebih dahulu.</div>'; return; }
+            if (matched.length === 0) {
+                result.innerHTML = '<div class="tracking-item">Belum ada pesanan yang cocok dengan nomor ini.</div>';
+                return;
+            }
+            result.innerHTML = matched.map(order => `
+                <div class="tracking-item">
+                    <strong>${order.name}</strong><br>
+                    <span>Pesanan: ${order.items}</span><br>
+                    <span>Total: Rp ${order.total.toLocaleString('id-ID')}</span><br>
+                    <span class="status-badge ${order.status}">${order.statusLabel || order.status}</span>
+                </div>
+            `).join('');
+        }
+
+        function exportSalesCSV() {
+            const rows = [['Waktu', 'Nama', 'No HP', 'Total']];
+            getFilteredSales().forEach(s => rows.push([s.time, s.name, s.phone || '-', s.total]));
+            downloadCSV(rows, 'penjualan_warkop.csv');
+        }
+
+        function exportMembersCSV() {
+            const rows = [['Nama', 'No HP', 'Level', 'Total Order', 'Total Belanja', 'Poin', 'Bergabung', 'Terakhir Order']];
+            Object.values(memberData).forEach(m => {
+                rows.push([m.name, m.phone, getMemberLevel(m.totalSpent).label, m.totalOrders, m.totalSpent, m.points, m.joinedAt, m.lastOrderAt]);
+            });
+            downloadCSV(rows, 'member_warkop.csv');
+        }
+
+        function downloadCSV(rows, filename) {
+            const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            showToast('✅ File ' + filename + ' berhasil didownload!');
+        }
+
+        function clearSalesData() {
+            if (confirm("Yakin mau hapus semua riwayat transaksi kasir, Lek?")) {
+                salesData = [];
+                localStorage.setItem('warkop_sales', JSON.stringify(salesData));
+                renderSalesDashboard();
+            }
+        }
+
+        function renderTableOptions() {
+            const select = document.getElementById('tableNumber');
+            const reservationSelect = document.getElementById('reservationTable');
+            if (!select && !reservationSelect) return;
+            const activeTables = tableData.filter(t => t.status === 'aktif');
+            const previousValue = select ? select.value : '';
+            if (select) {
+                select.innerHTML = '';
+                if (activeTables.length === 0) {
+                    select.innerHTML = '<option value="">Belum ada meja aktif</option>';
+                } else {
+                    activeTables.forEach(table => {
+                        const option = document.createElement('option');
+                        option.value = table.name;
+                        option.textContent = table.name;
+                        select.appendChild(option);
+                    });
+                }
+                if (previousValue && activeTables.some(t => t.name === previousValue)) {
+                    select.value = previousValue;
+                } else if (activeTables.length > 0) {
+                    select.value = activeTables[0].name;
+                }
+            }
+            if (reservationSelect) {
+                reservationSelect.innerHTML = '';
+                if (activeTables.length === 0) {
+                    reservationSelect.innerHTML = '<option value="">Belum ada meja aktif</option>';
+                } else {
+                    activeTables.forEach(table => {
+                        const option = document.createElement('option');
+                        option.value = table.name;
+                        option.textContent = table.name;
+                        reservationSelect.appendChild(option);
+                    });
+                }
+            }
+        }
+
+        function renderReservationList() {
+            const tbody = document.getElementById('adminReservationBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (reservationData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#999;">Belum ada reservasi.</td></tr>';
+                return;
+            }
+            reservationData.forEach(item => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${item.name}</td>
+                        <td>${item.phone}</td>
+                        <td>${item.date}</td>
+                        <td>${item.time}</td>
+                        <td>${item.table}</td>
+                        <td>${item.people}</td>
+                        <td>${item.note || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function handleReservation(event) {
+            event.preventDefault();
+            const name = document.getElementById('reservationName').value.trim();
+            const phone = document.getElementById('reservationPhone').value.trim();
+            const date = document.getElementById('reservationDate').value;
+            const time = document.getElementById('reservationTime').value;
+            const table = document.getElementById('reservationTable').value;
+            const people = document.getElementById('reservationPeople').value;
+            const note = document.getElementById('reservationNote').value.trim();
+            if (!name || !phone || !date || !time || !table) { alert('Lengkapi data reservasi dulu, Lek!'); return; }
+            reservationData.push({ id: Date.now(), name, phone, date, time, table, people, note, createdAt: new Date().toISOString() });
+            localStorage.setItem('warkop_reservations', JSON.stringify(reservationData));
+            renderReservationList();
+            document.getElementById('reservationForm').reset();
+            document.getElementById('reservationPeople').value = '2';
+            showToast('✅ Reservasi meja berhasil dikirim');
+        }
+
+        function renderTableManagement() {
+            const container = document.getElementById('tableManagementList');
+            if (!container) return;
+            container.innerHTML = '';
+            if (tableData.length === 0) {
+                container.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#999;">Belum ada meja yang dibuat.</p>';
+                return;
+            }
+            tableData.forEach(table => {
+                container.innerHTML += `
+                    <div class="table-card">
+                        <label>Nama Meja</label>
+                        <input value="${table.name}" onchange="updateTableName(${table.id}, this.value)">
+                        <label>Status</label>
+                        <select onchange="toggleTableStatus(${table.id}, this.value)">
+                            <option value="aktif" ${table.status === 'aktif' ? 'selected' : ''}>Aktif</option>
+                            <option value="nonaktif" ${table.status === 'nonaktif' ? 'selected' : ''}>Nonaktif</option>
+                        </select>
+                        <button class="btn-delete" onclick="deleteTable(${table.id})"><i class="fas fa-trash"></i> Hapus</button>
+                    </div>
+                `;
+            });
+        }
+
+        function saveTablesToStorage() {
+            localStorage.setItem('warkop_tables', JSON.stringify(tableData));
+            renderTableOptions();
+            renderTableManagement();
+        }
+
+        function updateTableName(id, newName) {
+            const trimmed = newName.trim();
+            if (!trimmed) return;
+            tableData = tableData.map(table => table.id === id ? { ...table, name: trimmed } : table);
+            saveTablesToStorage();
+            showToast('✅ Nama meja diperbarui');
+        }
+
+        function toggleTableStatus(id, status) {
+            tableData = tableData.map(table => table.id === id ? { ...table, status } : table);
+            saveTablesToStorage();
+            showToast('✅ Status meja diperbarui');
+        }
+
+        function handleAddTable(event) {
+            event.preventDefault();
+            const input = document.getElementById('newTableName');
+            const name = input.value.trim();
+            if (!name) { alert('Masukkan nama meja dulu, Lek!'); return; }
+            tableData.push({ id: Date.now(), name, status: 'aktif' });
+            input.value = '';
+            saveTablesToStorage();
+            showToast('✅ Meja baru ditambahkan');
+        }
+
+        function deleteTable(id) {
+            if (!confirm('Yakin hapus meja ini, Lek?')) return;
+            tableData = tableData.filter(table => table.id !== id);
+            saveTablesToStorage();
+            showToast('🗑️ Meja dihapus');
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminTableBody');
+            tbody.innerHTML = '';
+            if (menuWarkop.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #999;">Belum ada menu.</td></tr>';
+                return;
+            }
+            menuWarkop.forEach(item => {
+                const sc = item.status === "tersedia" ? "tersedia" : "habis";
+                const sl = item.status === "tersedia" ? "🟢 Tersedia" : "🔴 Habis";
+                tbody.innerHTML += `
+                    <tr>
+                        <td><img src="${item.image}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/50/2c3e50/ffdd59?text=X'"></td>
+                        <td><strong>${item.name}</strong><br><span style="font-size:11px; color:#888;">Kat: ${item.category.toUpperCase()}</span></td>
+                        <td>Rp ${item.price.toLocaleString('id-ID')}</td>
+                        <td><button class="btn-status-toggle ${sc}" onclick="toggleStatus(${item.id})">${sl}</button></td>
+                        <td><button class="btn-delete" onclick="deleteMenu(${item.id})"><i class="fas fa-trash-alt"></i></button></td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- Firestore sync helpers ---
+        async function initFirestoreSync() {
+            if (!window.firebase || !firebase.firestore) return;
+            try {
+                const db = firebase.firestore();
+                // load menus
+                const menusSnap = await db.collection('menus').get();
+                if (!menusSnap.empty) {
+                    menuWarkop = menusSnap.docs.map(d => d.data());
+                    localStorage.setItem('warkop_menu', JSON.stringify(menuWarkop));
+                }
+                // load members
+                const memSnap = await db.collection('members').get();
+                if (!memSnap.empty) {
+                    memberData = {};
+                    memSnap.docs.forEach(d => { memberData[d.id] = d.data(); });
+                    localStorage.setItem('warkop_members', JSON.stringify(memberData));
+                }
+                // load sales (last 500)
+                const salesSnap = await db.collection('sales').orderBy('timestamp', 'desc').limit(500).get();
+                if (!salesSnap.empty) {
+                    salesData = salesSnap.docs.map(d => d.data()).reverse();
+                    localStorage.setItem('warkop_sales', JSON.stringify(salesData));
+                }
+                // re-render UI
+                renderMenu();
+                renderAdminTable();
+                renderMemberTable();
+                renderSalesDashboard();
+                showToast('🔁 Sinkron Firestore aktif (baca/tulis)');
+            } catch (e) { console.warn('initFirestoreSync err', e); }
+        }
+
+        function toggleStatus(id) {
+            menuWarkop = menuWarkop.map(i => {
+                if (i.id === id) i.status = i.status === "tersedia" ? "habis" : "tersedia";
+                return i;
+            });
+            saveMenuToStorage();
+            renderAdminTable();
+        }
+
+        function handleAddNewMenu(event) {
+            event.preventDefault();
+            const newMenu = {
+                id: Date.now(),
+                name: document.getElementById('newMenuName').value,
+                price: parseInt(document.getElementById('newMenuPrice').value),
+                category: document.getElementById('newMenuCategory').value,
+                status: document.getElementById('newMenuStatus').value,
+                image: document.getElementById('newMenuImageUrl').value,
+                hasSweetness: document.getElementById('optSweetness').checked,
+                hasSpicy: document.getElementById('optSpicy').checked,
+                hasTopping: document.getElementById('optTopping').checked
+            };
+            menuWarkop.push(newMenu);
+            saveMenuToStorage();
+            showToast('✅ Menu baru berhasil ditambahkan!');
+            document.getElementById('addMenuForm').reset();
+            renderAdminTable();
+        }
+
+        function deleteMenu(id) {
+            if (confirm("Yakin mau hapus menu ini, Lek?")) {
+                menuWarkop = menuWarkop.filter(i => i.id !== id);
+                saveMenuToStorage();
+                renderAdminTable();
+            }
+        }
+
+        function saveMenuToStorage() {
+            localStorage.setItem('warkop_menu', JSON.stringify(menuWarkop));
+            // jika Firestore tersedia, sinkron ke koleksi 'menus'
+            if (window.firebase && firebase.firestore) {
+                try {
+                    const db = firebase.firestore();
+                    menuWarkop.forEach(item => {
+                        db.collection('menus').doc(String(item.id)).set(item).catch(e => console.warn('save menu err', e));
+                    });
+                } catch (e) { console.warn('saveMenuToStorage firestore err', e); }
+            }
+        }
+
+        function renderMemberTable() {
+            const tbody = document.getElementById('memberTableBody');
+            const q = (document.getElementById('memberSearchInput')?.value || '').toLowerCase();
+            const sortBy = document.getElementById('memberSortBy')?.value || 'lastOrderAt';
+
+            let members = Object.values(memberData);
+            if (q) members = members.filter(m => m.name.toLowerCase().includes(q) || m.phone.includes(q));
+
+            members.sort((a, b) => {
+                if (sortBy === 'lastOrderAt') return new Date(b.lastOrderAt) - new Date(a.lastOrderAt);
+                return b[sortBy] - a[sortBy];
+            });
+
+            let totalPts = 0, totalSpend = 0;
+            Object.values(memberData).forEach(m => { totalPts += m.points; totalSpend += m.totalSpent; });
+            document.getElementById('memberTotalCount').innerText = Object.keys(memberData).length;
+            document.getElementById('memberTotalPoints').innerText = totalPts.toLocaleString('id-ID');
+            document.getElementById('memberTotalSpend').innerText = 'Rp ' + totalSpend.toLocaleString('id-ID');
+
+            tbody.innerHTML = '';
+            if (members.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #999;">Belum ada member.</td></tr>';
+                return;
+            }
+            members.forEach(m => {
+                const lvl = getMemberLevel(m.totalSpent);
+                const joined = m.joinedAt ? new Date(m.joinedAt).toLocaleDateString('id-ID') : '-';
+                const last = m.lastOrderAt ? new Date(m.lastOrderAt).toLocaleDateString('id-ID') : '-';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${m.name}</strong></td>
+                        <td>${m.phone}</td>
+                        <td><span class="member-badge ${lvl.level}">${lvl.label}</span></td>
+                        <td>${m.totalOrders}</td>
+                        <td>Rp ${m.totalSpent.toLocaleString('id-ID')}</td>
+                        <td><strong style="color:#f39c12;">${m.points}</strong></td>
+                        <td>${joined}</td>
+                        <td>${last}</td>
+                        <td>
+                            <button class="btn-delete" onclick="deleteMember('${m.phone}')" title="Hapus member"><i class="fas fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function deleteMember(phone) {
+            if (confirm("Yakin hapus member ini, Lek?")) {
+                delete memberData[phone];
+                localStorage.setItem('warkop_members', JSON.stringify(memberData));
+                renderMemberTable();
+            }
+        }
+
+        function syncAllMembersToSheets() {
+            if (!confirm("Sinkron ulang semua member ke Google Sheets?")) return;
+            const members = Object.values(memberData);
+            if (members.length === 0) { alert("Belum ada member untuk disinkronkan."); return; }
+            let cnt = 0;
+            members.forEach(m => {
+                fetch(memberSheetsUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nama: m.name, hp: m.phone,
+                        joinedAt: m.joinedAt, lastOrderAt: m.lastOrderAt,
+                        totalOrders: m.totalOrders, totalSpent: m.totalSpent,
+                        points: m.points, level: getMemberLevel(m.totalSpent).label,
+                        isNewMember: false, lastTransaction: 0
+                    })
+                }).catch(() => { });
+                cnt++;
+            });
+            showToast(`☁️ Sinkron ${cnt} member ke Google Sheets!`);
+        }
+
+        function openMemberCheck() {
+            document.getElementById('memberCheckOverlay').style.display = 'flex';
+            document.getElementById('memberCheckResult').style.display = 'none';
+            document.getElementById('memberCheckPhone').value = '';
+        }
+
+        function closeMemberCheck() {
+            document.getElementById('memberCheckOverlay').style.display = 'none';
+        }
+
+        function checkMember() {
+            const phone = document.getElementById('memberCheckPhone').value.trim();
+            const result = document.getElementById('memberCheckResult');
+            if (!phone) { alert("Masukkan no HP dulu Lek!"); return; }
+            const cleanPhone = normalizePhone(phone);
+            const m = memberData[cleanPhone];
+            result.style.display = 'block';
+            if (m) {
+                const lvl = getMemberLevel(m.totalSpent);
+                result.innerHTML = `
+                    <div style="text-align:center; margin-bottom: 10px;">
+                        <span class="member-badge ${lvl.level}" style="font-size: 13px; padding: 6px 14px;">${lvl.label}</span>
+                    </div>
+                    <p><strong>👤 Nama:</strong> ${m.name}</p>
+                    <p><strong>📱 No HP:</strong> ${m.phone}</p>
+                    <p><strong>🛍️ Total Order:</strong> ${m.totalOrders} kali</p>
+                    <p><strong>💰 Total Belanja:</strong> Rp ${m.totalSpent.toLocaleString('id-ID')}</p>
+                    <p><strong>⭐ Poin Loyalti:</strong> <span style="color:#f39c12; font-weight:bold;">${m.points} poin</span> (± Rp ${(m.points * POINT_TO_RUPIAH).toLocaleString('id-ID')})</p>
+                    <p style="margin-top: 8px; font-size: 11px; color: #666;">Bergabung sejak: ${new Date(m.joinedAt).toLocaleDateString('id-ID')}</p>
+                `;
+            } else {
+                result.innerHTML = `<p style="text-align:center; color:#ff5e57;">❌ Belum terdaftar sebagai member. Yuk mulai order supaya jadi member!</p>`;
+            }
+        }
+
+        // --- Firebase initialization (isi dengan konfigurasi proyekmu di README) ---
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            projectId: "YOUR_PROJECT_ID",
+            // storageBucket, messagingSenderId, appId (opsional)
+        };
+        if (window.firebase) {
+            try { if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(firebaseConfig); } catch(e) { console.warn('Firebase init:', e); }
+            if (firebase.firestore) {
+                initFirestoreSync().catch(e => console.warn('Firestore sync init:', e));
+            }
+        }
+
+        renderTableOptions();
+        renderReservationList();
+        renderMenu();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a1cf8d46e8cba396',t:'MTc4NDM1NzQyMw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
